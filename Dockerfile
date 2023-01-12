@@ -4,8 +4,6 @@ LABEL Maintainer = "Jeremy Combs <jmcombs@me.com>"
 # Dockerfile ARG variables set automatically to aid in software installation
 ARG TARGETARCH
 
-RUN echo What is ${TARGETARCH}
-
 FROM base AS linux-amd64
 ARG ARCH=x64
 
@@ -69,7 +67,7 @@ RUN wget -N -O /tmp/dotnet-install.tar.gz ${DOTNET_PACKAGE_URL} \
 
 # PowerShell Core 7.2 (LTS)
 # apt package(s): ca-certificates, less, libssl1.1, libicu66, wget, unzip
-ARG PS_VERSION=7.2.7
+ARG PS_VERSION=7.2.8
     ARG PS_PACKAGE=powershell-${PS_VERSION}-linux-${ARCH}.tar.gz
     ARG PS_PACKAGE_URL=https://github.com/PowerShell/PowerShell/releases/download/v${PS_VERSION}/${PS_PACKAGE}
     ARG PS_INSTALL_VERSION=7
@@ -92,14 +90,7 @@ ARG VMWARECEIP=false
 # Install and setup VMware.PowerCLI PowerShell Module
 RUN pwsh -Command Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false \
-    && pwsh -Command Set-PowerCLIConfiguration -Scope AllUsers -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
-    && pwsh -Command \
-        Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock { \
-            param\(\$commandName, \$wordToComplete, \$cursorPosition\) \
-                dotnet complete --position \$cursorPosition \"\$wordToComplete\" \| ForEach-Object { \
-                    [System.Management.Automation.CompletionResult]::new\(\$_, \$_, \'ParameterValue\', \$_\) \
-                } \
-        }
+    && pwsh -Command Set-PowerCLIConfiguration -Scope AllUsers -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false
 
 # Defining non-root User
 ARG USERNAME=coder
