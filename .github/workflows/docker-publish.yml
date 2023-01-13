@@ -1,4 +1,4 @@
-name: Build & Publish to Docker
+name: Build and Publish to Docker
 
 on:
   schedule:
