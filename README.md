@@ -9,14 +9,17 @@ VMware's PowerCLI with PowerShell Core and Python for ImageBuilder Support in Li
 
 ## About
 
-This container is based on Ubuntu 20.04, contains the `mkisofs` package (for repacking ISO images) and has the following software installed, per the [Compatibility Matrixes for VMware PowerCLI 13.0.0](https://developer.vmware.com/docs/17472//powercli1300-compat-matrix.html#install-prereq):
+This container is based on Ubuntu 20.04, contains the `mkisofs` package (for repacking ISO images) and has the following software installed, per the [Compatibility Matrixes for VMware PowerCLI 13.1.0](https://vdc-repo.vmware.com/vmwb-repository/dcr-public/f479301e-3164-47bc-9584-89b84a1bf5ce/c4ea2d2f-bf6d-4c18-bb20-6c4782ac6576/powercli1310-compat-matrix.html) and [Compatibility Matrixes for VMware PowerCLI 13.0.0](https://developer.vmware.com/docs/17472//powercli1300-compat-matrix.html#install-prereq):
 
 - .NET Core 3.1 (which is now [End of Support](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core))
-- PowerShell Core 7 LTS
+- PowerShell Core 7.2 LTS
 - Python 3.7 (via ["deadsnakes" team](https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa))
-- VMware PowerCLI 13
+- VMware PowerCLI 13.1.0 (for `x64`) or 13.0.0 (for `ARM64`)
 
-**NOTE**: Python is configured per requirements outlined in [Configuring VMware PowerCLI](https://vdc-repo.vmware.com/vmwb-repository/dcr-public/9619cb6d-3975-4bff-aa1f-0e785283a1a9/58d0925b-e15d-4803-bbd4-eb314dd165b0/GUID-38D6A8C2-D4ED-40E6-88B8-FBDDD955137E.html)
+**NOTE**:
+
+- Python is configured per requirements outlined in [Install and Configure Python on Linux](https://developer.vmware.com/docs/15315/powercli-user-s-guide/GUID-101A5D2A-6BEB-43B0-8328-3B2F9F80C628.html)
+- For `ARM64` (aka Apple Silicone) users, there is a bug in PowerCLI 13.1.0 with ImageBuilder and it will not run so, `ARM64` images contain PowerCLI 13.0.0. Actively racking this issue down with VMware for resolution.
 
 ## How to Use
 

@@ -1,22 +1,11 @@
 FROM ubuntu:20.04 AS base
 LABEL Maintainer = "Jeremy Combs <jmcombs@me.com>"
 
-# Dockerfile ARG variables set automatically to aid in software installation
-ARG TARGETARCH
-
-FROM base AS linux-amd64
-ARG ARCH=x64
-
-FROM base AS linux-arm64
-ARG ARCH=arm64
-
-FROM base AS linux-arm
-ARG ARCH=arm
-
-FROM linux-${TARGETARCH} AS final
-
 # Switching to non-interactive for cotainer build
 ENV DEBIAN_FRONTEND=noninteractive
+
+# Dockerfile ARG variables set automatically to aid in software installation
+ARG TARGETARCH
 
 # Configure apt and install packages
 RUN apt-get update \
@@ -32,8 +21,6 @@ RUN apt-get update \
         python3.7-dev \
         python3.7-distutils \
         sudo \
-        unzip \
-        wget \
         whois \
         less \
         libc6 \
@@ -53,45 +40,6 @@ RUN localedef -c -i en_US -f UTF-8 en_US.UTF-8 \
     && locale-gen en_US.UTF-8 \
     && dpkg-reconfigure locales
 
-# Microsoft .NET Core 3.1 Runtime for VMware PowerCLI
-# apt package(s): libc6m, libgcc1, libgssapi-krb5-2, libicu66, libssl1.1, libstdc++6, unzip, wget, zlib1g
-ARG DOTNET_VERSION=3.1.32
-    ARG DOTNET_PACKAGE=dotnet-runtime-${DOTNET_VERSION}-linux-${ARCH}.tar.gz
-    ARG DOTNET_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Runtime/${DOTNET_VERSION}/${DOTNET_PACKAGE}
-    ENV DOTNET_ROOT=/opt/microsoft/dotnet/${DOTNET_VERSION}
-    ENV PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
-RUN wget -N -O /tmp/dotnet-install.tar.gz ${DOTNET_PACKAGE_URL} \
-    && mkdir -p ${DOTNET_ROOT} \
-    && tar zxf /tmp/dotnet-install.tar.gz -C ${DOTNET_ROOT} \
-    && rm /tmp/dotnet-install.tar.gz
-
-# PowerShell Core 7.2 (LTS)
-# apt package(s): ca-certificates, less, libssl1.1, libicu66, wget, unzip
-ARG PS_VERSION=7.2.8
-    ARG PS_PACKAGE=powershell-${PS_VERSION}-linux-${ARCH}.tar.gz
-    ARG PS_PACKAGE_URL=https://github.com/PowerShell/PowerShell/releases/download/v${PS_VERSION}/${PS_PACKAGE}
-    ARG PS_INSTALL_VERSION=7
-    ARG PS_INSTALL_FOLDER=/opt/microsoft/powershell/$PS_INSTALL_VERSION
-RUN wget -N -O /tmp/powershell.tar.gz https://github.com/PowerShell/PowerShell/releases/download/v${PS_VERSION}/powershell-${PS_VERSION}-linux-${ARCH}.tar.gz \
-    && mkdir -p ${PS_INSTALL_FOLDER} \
-    && tar zxf /tmp/powershell.tar.gz -C ${PS_INSTALL_FOLDER} \
-    && chmod a+x,o-w ${PS_INSTALL_FOLDER}/pwsh \
-    && ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh \
-    && rm /tmp/powershell.tar.gz \
-    && echo /usr/bin/pwsh >> /etc/shells
-
-# Python 3.7 for VMware PowerCLI
-# apt package(s): gcc, wget, python3.7, python3.7-dev, python3.7-distutils
-RUN wget -P /tmp https://bootstrap.pypa.io/get-pip.py \
-     && python3.7 /tmp/get-pip.py \
-     && python3.7 -m pip install six psutil lxml pyopenssl
-
-ARG VMWARECEIP=false
-# Install and setup VMware.PowerCLI PowerShell Module
-RUN pwsh -Command Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose \
-    && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false \
-    && pwsh -Command Set-PowerCLIConfiguration -Scope AllUsers -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false
-
 # Defining non-root User
 ARG USERNAME=coder
 ARG USER_UID=1000
@@ -110,8 +58,78 @@ RUN apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Use non-root user as default account when launching container
+FROM base AS linux-amd64
+ARG DOTNET_ARCH=x64
+ARG PS_ARCH=x64
+
+FROM base AS linux-arm64
+ARG DOTNET_ARCH=arm64
+ARG PS_ARCH=arm64
+
+FROM base AS linux-arm
+ARG DOTNET_ARCH=arm
+ARG PS_ARCH=arm32
+
+FROM linux-${TARGETARCH} AS msft-install
+
+# Microsoft .NET Core 3.1 Runtime for VMware PowerCLI
+# apt package(s): libc6m, libgcc1, libgssapi-krb5-2, libicu66, libssl1.1, libstdc++6, unzip, wget, zlib1g
+ARG DOTNET_VERSION=3.1.32
+    ARG DOTNET_PACKAGE=dotnet-runtime-${DOTNET_VERSION}-linux-${DOTNET_ARCH}.tar.gz
+    ARG DOTNET_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Runtime/${DOTNET_VERSION}/${DOTNET_PACKAGE}
+    ENV DOTNET_ROOT=/opt/microsoft/dotnet/${DOTNET_VERSION}
+    ENV PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+ADD ${DOTNET_PACKAGE_URL} /tmp/${DOTNET_PACKAGE}
+RUN mkdir -p ${DOTNET_ROOT} \
+    && tar zxf /tmp/${DOTNET_PACKAGE} -C ${DOTNET_ROOT} \
+    && rm /tmp/${DOTNET_PACKAGE}
+
+# PowerShell Core 7.2 (LTS)
+# apt package(s): ca-certificates, less, libssl1.1, libicu66, wget, unzip
+ARG PS_VERSION=7.2.11
+    ARG PS_PACKAGE=powershell-${PS_VERSION}-linux-${PS_ARCH}.tar.gz
+    ARG PS_PACKAGE_URL=https://github.com/PowerShell/PowerShell/releases/download/v${PS_VERSION}/${PS_PACKAGE}
+    ARG PS_INSTALL_VERSION=7
+    ARG PS_INSTALL_FOLDER=/opt/microsoft/powershell/$PS_INSTALL_VERSION
+ADD ${PS_PACKAGE_URL} /tmp/${PS_PACKAGE}
+RUN mkdir -p ${PS_INSTALL_FOLDER} \
+    && tar zxf /tmp/${PS_PACKAGE} -C ${PS_INSTALL_FOLDER} \
+    && chmod a+x,o-w ${PS_INSTALL_FOLDER}/pwsh \
+    && ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh \
+    && rm /tmp/${PS_PACKAGE} \
+    && echo /usr/bin/pwsh >> /etc/shells
+
+FROM msft-install as vmware-install-arm64
+
+ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
+
+ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
+RUN mkdir -p /usr/local/share/powershell/Modules \
+    && pwsh -Command Expand-Archive -Path /tmp/vmware-powercli.zip -DestinationPath /usr/local/share/powershell/Modules \
+    && rm /tmp/vmware-powercli.zip
+
+FROM msft-install as vmware-install-amd64
+
+# Install and setup VMware.PowerCLI PowerShell Module
+RUN pwsh -Command Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose
+
+FROM vmware-install-${TARGETARCH} as vmware-install-common
+
+ARG VMWARECEIP=false
+
+# Switch to non-root user for remainder of build
 USER $USERNAME
+
+# Python 3 for VMware PowerCLI
+# apt package(s): gcc, wget, python3, python3-dev, python3-distutils
+ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/get-pip.py /tmp/
+ENV PATH=${PATH}:/home/$USERNAME/.local/bin
+RUN python3.7 /tmp/get-pip.py \
+    && python3.7 -m pip install six psutil lxml pyopenssl \
+    && rm /tmp/get-pip.py
+RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
+    && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
+
 # Switching back to interactive after container build
 ENV DEBIAN_FRONTEND=dialog
 # Setting entrypoint to Powershell
