@@ -12,7 +12,7 @@ VMware's PowerCLI with PowerShell Core and Python for ImageBuilder Support in Li
 This container is based on Ubuntu 20.04, contains the `mkisofs` package (for repacking ISO images) and has the following software installed, per the [Compatibility Matrixes for VMware PowerCLI 13.1.0](https://vdc-repo.vmware.com/vmwb-repository/dcr-public/f479301e-3164-47bc-9584-89b84a1bf5ce/c4ea2d2f-bf6d-4c18-bb20-6c4782ac6576/powercli1310-compat-matrix.html) and [Compatibility Matrixes for VMware PowerCLI 13.0.0](https://developer.vmware.com/docs/17472//powercli1300-compat-matrix.html#install-prereq):
 
 - .NET Core 3.1 (which is now [End of Support](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core))
-- PowerShell Core 7.2 LTS
+- PowerShell Core 7.2 LTS (Automated)
 - Python 3.7 (via ["deadsnakes" team](https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa))
 - VMware PowerCLI 13.1.0 (for `x64`) or 13.0.0 (for `ARM64`)
 
