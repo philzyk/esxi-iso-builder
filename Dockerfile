@@ -11,12 +11,14 @@ ARG TARGETARCH
 RUN apt-get update \
     && apt-get -y install software-properties-common \
     && add-apt-repository ppa:deadsnakes/ppa -y \
-    && apt-get -y install --no-install-recommends  \ 
+    && apt-get -y install --no-install-recommends \
         apt-transport-https \
         ca-certificates \
+        curl \
         gcc \
         locales \
         mkisofs \
+        xorriso \
         python3.7 \
         python3.7-dev \
         python3.7-distutils \
@@ -86,17 +88,16 @@ RUN mkdir -p ${DOTNET_ROOT} \
 
 # PowerShell Core 7.2 (LTS)
 # apt package(s): ca-certificates, less, libssl1.1, libicu66, wget, unzip
-ARG PS_VERSION=7.2.11
-    ARG PS_PACKAGE=powershell-${PS_VERSION}-linux-${PS_ARCH}.tar.gz
-    ARG PS_PACKAGE_URL=https://github.com/PowerShell/PowerShell/releases/download/v${PS_VERSION}/${PS_PACKAGE}
-    ARG PS_INSTALL_VERSION=7
-    ARG PS_INSTALL_FOLDER=/opt/microsoft/powershell/$PS_INSTALL_VERSION
-ADD ${PS_PACKAGE_URL} /tmp/${PS_PACKAGE}
-RUN mkdir -p ${PS_INSTALL_FOLDER} \
-    && tar zxf /tmp/${PS_PACKAGE} -C ${PS_INSTALL_FOLDER} \
+RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | cut -d 'v' -f 2 | cut -d '.' -f 1) \
+    && PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} \
+    && PS_PACKAGE=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH} | cut -d '"' -f 4 | xargs basename) \
+    && PS_PACKAGE_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH} | cut -d '"' -f 4) \
+    && curl -LO ${PS_PACKAGE_URL} \
+    && mkdir -p ${PS_INSTALL_FOLDER} \
+    && tar zxf ${PS_PACKAGE} -C ${PS_INSTALL_FOLDER} \
     && chmod a+x,o-w ${PS_INSTALL_FOLDER}/pwsh \
     && ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh \
-    && rm /tmp/${PS_PACKAGE} \
+    && rm ${PS_PACKAGE} \
     && echo /usr/bin/pwsh >> /etc/shells
 
 FROM msft-install as vmware-install-arm64
