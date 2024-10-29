@@ -25,6 +25,7 @@ RUN apt-get update \
         sudo \
         whois \
         less \
+        p7zip-full\
         libc6 \
         libgcc1 \
         libgssapi-krb5-2 \
