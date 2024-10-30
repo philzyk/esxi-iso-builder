@@ -125,24 +125,8 @@ RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI" && \
 
 FROM msft-install as vmware-install-amd64
 
-ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
-
-# Install unzip and create the necessary directory
-RUN apt-get update && \
-    apt-get install -y curl unzip && \
-    mkdir -p /usr/local/share/powershell/Modules
-
-# Download and unzip the PowerCLI package
-RUN curl -o /tmp/vmware-powercli.zip ${POWERCLIURL}
-RUN ls -l /tmp/vmware-powercli.zip
-RUN mkdir -p /usr/local/share/powershell/Modules
-RUN unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules
-RUN rm /tmp/vmware-powercli.zip
-
-# Ensure PowerCLI is installed and available
-RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI" && \
-    pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false" && \
-    pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
+# Install and setup VMware.PowerCLI PowerShell Module
+RUN pwsh -Command Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose
 
 FROM vmware-install-${TARGETARCH} as vmware-install-common
 
