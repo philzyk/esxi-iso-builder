@@ -13,7 +13,6 @@ ARG USERNAME=coder
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 ARG DOTNET_VERSION=3.1.32
-ARG VMWARECEIP=false
 
 # Set Locale environment variables
 ENV LANGUAGE=en_US.UTF-8 \
@@ -163,7 +162,7 @@ RUN python3.7 /tmp/get-pip.py && \
     rm /tmp/get-pip.py
 
 # Configure VMware CEIP participation
-RUN pwsh -Command "$ErrorActionPreference = 'Stop'; if ('${VMWARECEIP}' -eq 'true') { Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$True -Confirm:\$False } else { Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$False -Confirm:\$False }"
+RUN pwsh -Command "$ErrorActionPreference = 'Stop'; Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP -Confirm:\$false"
 
 # Set Python path for PowerCLI
 RUN pwsh -Command "$ErrorActionPreference = 'Stop'; Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
