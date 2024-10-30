@@ -168,7 +168,8 @@ RUN python3.7 /tmp/get-pip.py && \
     rm /tmp/get-pip.py
 
 # Configure VMware CEIP participation
-RUN pwsh -Command "$ErrorActionPreference = 'Stop'; Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP:\$false -Confirm:\$false"
+#RUN pwsh -Command "$ErrorActionPreference = 'Stop'; Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP:\$false -Confirm:\$false"
+RUN pwsh -Command '$ErrorActionPreference = 'Stop'; Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP:$false -Confirm:$false'
 
 # Set Python path for PowerCLI
 RUN pwsh -Command "$ErrorActionPreference = 'Stop'; Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
