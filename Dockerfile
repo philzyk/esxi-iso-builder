@@ -102,7 +102,7 @@ ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830
 RUN mkdir -p /usr/local/share/powershell/Modules
 RUN curl -L ${POWERCLIURL} -o /tmp/vmware-powercli.zip
 RUN file /tmp/vmware-powercli.zip
-RUN 7z e /tmp/vmware-powercli.zip -0 /usr/local/share/powershell/Modules
+RUN 7z e /tmp/vmware-powercli.zip -0 /usr/local/share/powershell/Modules -y
 RUN ls -lah /usr/local/share/powershell/Modules
 RUN rm /tmp/vmware-powercli.zip
 
@@ -119,9 +119,11 @@ RUN curl -L https://bootstrap.pypa.io/pip/3.7/get-pip.py | python3.7 && \
     python3.7 -m pip install six psutil lxml pyopenssl
 RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Repository PSGallery -Force" && \
     pwsh -Command "Import-Module VMware.PowerCLI" && \
-    pwsh -Command "Set-PowerCLIConfiguration -InvalidCertificateAction Fail" && \
+    pwsh -Command "Set-PowerCLIConfiguration -InvalidCertificateAction Fail -Confirm:\$false -ErrorAction Stop" && \
     pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false" && \
     pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
+
+RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 ENV DEBIAN_FRONTEND=dialog
 ENTRYPOINT ["pwsh"]
