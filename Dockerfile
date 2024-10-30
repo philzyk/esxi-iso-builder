@@ -22,6 +22,7 @@ RUN apt-get update \
         curl \
         gcc \
         locales \
+        curl \
         mkisofs \
         xorriso \
         python3.7 \
@@ -111,10 +112,24 @@ FROM msft-install as vmware-install-arm64
 
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 
-ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
-RUN mkdir -p /usr/local/share/powershell/Modules \
-    && pwsh -Command Expand-Archive -Path /tmp/vmware-powercli.zip -DestinationPath /usr/local/share/powershell/Modules \
-    && rm /tmp/vmware-powercli.zip
+# Install curl and unzip
+RUN apt-get update && \
+    apt-get install -y curl unzip && \
+    rm -rf /var/lib/apt/lists/*
+
+# Define the PowerCLI URL
+ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
+
+# Download and unzip the PowerCLI package
+RUN curl -o /tmp/vmware-powercli.zip ${POWERCLIURL} #&& \
+RUN ls -lah /tmp/vmware-powercli.zip #&& \
+RUN file /tmp/vmware-powercli.zip #&& \
+RUN unzip -t /tmp/vmware-powercli.zip #&& \
+RUN mkdir -p /usr/local/share/powershell/Modules #&& \
+RUN ls -lah /usr/local/share/powershell/Modules #&& \
+RUN unzip -v /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules #&& \
+RUN ls -lah /usr/local/share/powershell/Modules #&& \
+RUN rm /tmp/vmware-powercli.zip
 
 FROM msft-install as vmware-install-amd64
 
