@@ -102,7 +102,7 @@ ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830
 RUN mkdir -p /usr/local/share/powershell/Modules
 RUN curl -L ${POWERCLIURL} -o /tmp/vmware-powercli.zip
 RUN file /tmp/vmware-powercli.zip
-RUN RUN 7z e /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules -y
+RUN 7z e /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules -y
 RUN ls -lah /usr/local/share/powershell/Modules
 RUN rm /tmp/vmware-powercli.zip
 
