@@ -137,8 +137,9 @@ ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /tmp/get-pip.py \
     && python3.7 -m pip install six psutil lxml pyopenssl \
     && rm /tmp/get-pip.py
-RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
-    && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
+
+RUN pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false" && \
+    pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 ENV DEBIAN_FRONTEND=dialog
 ENTRYPOINT ["pwsh"]
