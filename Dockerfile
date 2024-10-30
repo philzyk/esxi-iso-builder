@@ -112,9 +112,9 @@ RUN apt-get update && \
     apt-get install -y unzip && \
     mkdir -p /usr/local/share/powershell/Modules
 
-# Unzip the PowerCLI package
-ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
-RUN ls -l /tmp/vmware-powercli.zip && \
+# Download and unzip the PowerCLI package
+RUN curl -o /tmp/vmware-powercli.zip ${POWERCLIURL} && \
+    ls -l /tmp/vmware-powercli.zip && \
     unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules && \
     rm /tmp/vmware-powercli.zip
 
@@ -130,9 +130,9 @@ RUN apt-get update && \
     apt-get install -y unzip && \
     mkdir -p /usr/local/share/powershell/Modules
 
-# Unzip the PowerCLI package
-ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
-RUN ls -l /tmp/vmware-powercli.zip && \
+# Download and unzip the PowerCLI package
+RUN curl -o /tmp/vmware-powercli.zip ${POWERCLIURL} && \
+    ls -l /tmp/vmware-powercli.zip && \
     unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules && \
     rm /tmp/vmware-powercli.zip
 
