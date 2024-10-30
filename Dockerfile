@@ -1,18 +1,34 @@
+# Syntax version
+# Use explicit syntax version for better compatibility
+syntax = docker/dockerfile:1
+
 # Base image
 FROM ubuntu:20.04 AS base
-LABEL Maintainer="Jeremy Combs <jmcombs@me.com>"
+LABEL maintainer="Jeremy Combs <jmcombs@me.com>"
 
 # Set environment to non-interactive for apt install
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Dockerfile ARG variables for installation
 ARG TARGETARCH
+ARG USERNAME=coder
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+ARG DOTNET_VERSION=3.1.32
+ARG VMWARECEIP=false
+
+# Set Locale environment variables
+ENV LANGUAGE=en_US.UTF-8 \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    PATH=/opt/microsoft/dotnet/${DOTNET_VERSION}:/opt/microsoft/dotnet/${DOTNET_VERSION}/tools:/home/$USERNAME/.local/bin:$PATH \
+    DOTNET_ROOT=/opt/microsoft/dotnet/${DOTNET_VERSION}
 
 # Configure apt and install base packages
-RUN apt-get update \
-    && apt-get -y install software-properties-common \
-    && add-apt-repository ppa:deadsnakes/ppa -y \
-    && apt-get -y install --no-install-recommends \
+RUN apt-get update && \
+    apt-get -y install --no-install-recommends software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa -y && \
+    apt-get -y install --no-install-recommends \
         apt-transport-https \
         ca-certificates \
         curl \
@@ -34,106 +50,89 @@ RUN apt-get update \
         libicu66 \
         libssl1.1 \
         libstdc++6 \
-        zlib1g \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+        zlib1g && \
+    # Set Locale
+    localedef -c -i en_US -f UTF-8 en_US.UTF-8 && \
+    locale-gen en_US.UTF-8 && \
+    dpkg-reconfigure locales && \
+    # Set up non-root User and sudo privileges
+    groupadd --gid $USER_GID $USERNAME && \
+    useradd --uid $USER_UID --gid $USER_GID --shell /usr/bin/pwsh --create-home $USERNAME && \
+    echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME && \
+    chmod 0440 /etc/sudoers.d/$USERNAME && \
+    # Clean up
+    apt-get autoremove -y && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Set Locale
-ENV LANGUAGE=en_US.UTF-8 \
-    LANG=en_US.UTF-8 \
-    LC_ALL=en_US.UTF-8
-RUN localedef -c -i en_US -f UTF-8 en_US.UTF-8 \
-    && locale-gen en_US.UTF-8 \
-    && dpkg-reconfigure locales
-
-# Define non-root User
-ARG USERNAME=coder
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-
-# Set up non-root User and sudo privileges
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID --shell /usr/bin/pwsh --create-home $USERNAME \
-    && echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
 WORKDIR /home/$USERNAME
 
-# Clean up apt
-RUN apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# OS-specific installation based on architecture
-FROM base AS LINUX-AMD64
+# Architecture-specific stages
+FROM base AS linux-amd64
 ARG DOTNET_ARCH=x64
 ARG PS_ARCH=x64
 
-FROM base AS LINUX-ARM64
+FROM base AS linux-arm64
 ARG DOTNET_ARCH=arm64
 ARG PS_ARCH=arm64
 
-FROM base AS LINUX-ARM
+FROM base AS linux-arm
 ARG DOTNET_ARCH=arm
-ARG PS_ARCH=arm32
+ARG PS_ARCH=arm
+
+# Microsoft installations
+FROM linux-${TARGETARCH} AS msft-install
+ARG DOTNET_VERSION
+ARG DOTNET_ARCH
+ARG PS_ARCH
 
 # Install .NET Core
-FROM linux-${TARGETARCH} AS msft-install
-ARG DOTNET_VERSION=3.1.32
-ARG DOTNET_PACKAGE=dotnet-runtime-${DOTNET_VERSION}-linux-${DOTNET_ARCH}.tar.gz
-ARG DOTNET_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Runtime/${DOTNET_VERSION}/${DOTNET_PACKAGE}
-ENV DOTNET_ROOT=/opt/microsoft/dotnet/${DOTNET_VERSION}
-ENV PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
-RUN curl -L ${DOTNET_PACKAGE_URL} -o /tmp/dotnet.tar.gz \
-    && mkdir -p ${DOTNET_ROOT} \
-    && tar zxf /tmp/dotnet.tar.gz -C ${DOTNET_ROOT} \
-    && rm /tmp/dotnet.tar.gz
+RUN DOTNET_PACKAGE=dotnet-runtime-${DOTNET_VERSION}-linux-${DOTNET_ARCH}.tar.gz && \
+    DOTNET_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Runtime/${DOTNET_VERSION}/${DOTNET_PACKAGE} && \
+    curl -L ${DOTNET_PACKAGE_URL} -o /tmp/dotnet.tar.gz && \
+    mkdir -p ${DOTNET_ROOT} && \
+    tar zxf /tmp/dotnet.tar.gz -C ${DOTNET_ROOT} && \
+    rm /tmp/dotnet.tar.gz
 
-# Install PowerShell Core 7.2 (LTS)
-RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release?tag=lts | cut -d 'v' -f 2 | cut -d '.' -f 1) \
-    && PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} \
-    && PS_PACKAGE=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release?tag=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4 | xargs basename) \
-    && PS_PACKAGE_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release?tag=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4) \
-    && curl -LO ${PS_PACKAGE_URL} \
-    && mkdir -p ${PS_INSTALL_FOLDER} \
-    && tar zxf ${PS_PACKAGE} -C ${PS_INSTALL_FOLDER} \
-    && chmod a+x,o-w ${PS_INSTALL_FOLDER}/pwsh \
-    && ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh \
-    && rm ${PS_PACKAGE} \
-    && echo /usr/bin/pwsh >> /etc/shells
+# Install PowerShell Core
+RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release?tag=lts | cut -d 'v' -f 2 | cut -d '.' -f 1) && \
+    PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} && \
+    PS_PACKAGE_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release?tag=lts | \
+        sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | \
+        xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4) && \
+    curl -L ${PS_PACKAGE_URL} -o powershell.tar.gz && \
+    mkdir -p ${PS_INSTALL_FOLDER} && \
+    tar zxf powershell.tar.gz -C ${PS_INSTALL_FOLDER} && \
+    chmod a+x,o-w ${PS_INSTALL_FOLDER}/pwsh && \
+    ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh && \
+    rm powershell.tar.gz && \
+    echo /usr/bin/pwsh >> /etc/shells
 
-# VMware PowerCLI installation for arm64
-FROM msft-install as vmware-install-arm64
+# VMware PowerCLI installation stages
+FROM msft-install AS vmware-install-arm64
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
-RUN curl -L ${POWERCLIURL} -o /tmp/vmware-powercli.zip \
-    && mkdir -p /usr/local/share/powershell/Modules \
-    && unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules \
-    && rm /tmp/vmware-powercli.zip
+RUN curl -L ${POWERCLIURL} -o /tmp/vmware-powercli.zip && \
+    mkdir -p /usr/local/share/powershell/Modules && \
+    unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules && \
+    rm /tmp/vmware-powercli.zip
 
-# VMware PowerCLI installation for amd64
-FROM msft-install as vmware-install-amd64
+FROM msft-install AS vmware-install-amd64
 RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose"
 
-FROM vmware-install-${TARGETARCH} as vmware-install-common
+# Final stage
+FROM vmware-install-${TARGETARCH}
 
-# Disable VMware CEIP
-ARG VMWARECEIP=false
-
-# Switch to non-root user
 USER $USERNAME
 
-# Install Python 3 for VMware PowerCLI
+# Install Python dependencies for VMware PowerCLI
 ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /tmp/get-pip.py
-ENV PATH=${PATH}:/home/$USERNAME/.local/bin
-RUN python3.7 /tmp/get-pip.py \
-    && python3.7 -m pip install six psutil lxml pyopenssl \
-    && rm /tmp/get-pip.py
+RUN python3.7 /tmp/get-pip.py && \
+    python3.7 -m pip install six psutil lxml pyopenssl && \
+    rm /tmp/get-pip.py && \
+    # Configure PowerCLI
+    pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $($VMWARECEIP -eq 'true') -Confirm:\$false" && \
+    pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
-# Set PowerCLI Configuration with direct boolean interpretation
-RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $($VMWARECEIP -eq 'true') -Confirm:\$false" \
-    && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
-
-# Set back to interactive for container use
 ENV DEBIAN_FRONTEND=dialog
 
-# Setting entrypoint to PowerShell
 ENTRYPOINT ["pwsh"]
