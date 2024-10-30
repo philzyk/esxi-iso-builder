@@ -129,7 +129,7 @@ ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830
 
 # Install unzip and create the necessary directory
 RUN apt-get update && \
-    apt-get install -y unzip && \
+    apt-get install -y curl unzip && \
     mkdir -p /usr/local/share/powershell/Modules
 
 # Download and unzip the PowerCLI package
