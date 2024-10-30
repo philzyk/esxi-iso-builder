@@ -2,7 +2,7 @@
 FROM ubuntu:20.04 AS base
 LABEL Maintainer="Jeremy Combs <jmcombs@me.com>"
 
-# Set environment to non-interactive for apt
+# Set environment to non-interactive for apt install
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Dockerfile ARG variables for installation
