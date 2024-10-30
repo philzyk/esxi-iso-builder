@@ -124,7 +124,7 @@ USER $USERNAME
 
 # Python 3 for VMware PowerCLI
 # apt package(s): gcc, wget, python3, python3-dev, python3-distutils
-ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/get-pip.py /tmp/
+ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /tmp/
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /tmp/get-pip.py \
     && python3.7 -m pip install six psutil lxml pyopenssl \
