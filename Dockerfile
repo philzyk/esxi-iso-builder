@@ -27,13 +27,16 @@ RUN apt-get update \
         whois \
         less \
         p7zip-full \
+        unzip \  # Ensure unzip is available
         libc6 \
         libgcc1 \
         libgssapi-krb5-2 \
         libicu66 \
         libssl1.1 \
         libstdc++6 \
-        zlib1g
+        zlib1g \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set Locale
 ENV LANGUAGE=en_US.UTF-8 \
@@ -108,7 +111,7 @@ RUN curl -L ${POWERCLIURL} -o /tmp/vmware-powercli.zip \
 
 # VMware PowerCLI installation for amd64
 FROM msft-install as vmware-install-amd64
-RUN pwsh -Command Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose
+RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose"
 
 FROM vmware-install-${TARGETARCH} as vmware-install-common
 
@@ -124,8 +127,8 @@ ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /tmp/get-pip.py \
     && python3.7 -m pip install six psutil lxml pyopenssl \
     && rm /tmp/get-pip.py
-RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
-    && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
+RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP $${VMWARECEIP} -Confirm:\$false" \
+    && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 # Set back to interactive for container use
 ENV DEBIAN_FRONTEND=dialog
