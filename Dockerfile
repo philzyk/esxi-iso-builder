@@ -106,24 +106,11 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
     rm powershell.tar.gz && \
     echo /usr/bin/pwsh >> /etc/shells
 
-#### VMware PowerCLI installation stages
-####FROM msft-install AS vmware-install-arm64
-#### For ARM64, we'll use PowerShell Gallery with a specific version
-####RUN pwsh -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted" && \
-####    pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force"
-
-####
-# Base image with multi-arch support
-FROM --platform=$TARGETPLATFORM mcr.microsoft.com/powershell:latest
-
-# Install prerequisites and set up PowerShell
+# VMware PowerCLI installation stages with robust error handling
+FROM msft-install AS vmware-install-arm64
 SHELL ["pwsh", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
-
-# Configure PowerShell Gallery
-RUN Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-
-# Install VMware PowerCLI with error handling
-RUN $MaxAttempts = 3; \
+RUN Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \
+    $MaxAttempts = 3; \
     $Attempt = 1; \
     do { \
         try { \
@@ -141,11 +128,28 @@ RUN $MaxAttempts = 3; \
             Start-Sleep -Seconds 5; \
         } \
     } while ($true)
-####
 
 FROM msft-install AS vmware-install-amd64
-RUN pwsh -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted" && \
-    pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force"
+SHELL ["pwsh", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+RUN Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \
+    $MaxAttempts = 3; \
+    $Attempt = 1; \
+    do { \
+        try { \
+            Write-Host "Attempt $Attempt to install VMware.PowerCLI..."; \
+            Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose; \
+            Write-Host "Installation successful!"; \
+            break; \
+        } catch { \
+            if ($Attempt -eq $MaxAttempts) { \
+                Write-Host "Failed after $MaxAttempts attempts. Last error: $_"; \
+                throw; \
+            } \
+            Write-Host "Attempt $Attempt failed. Retrying... Error: $_"; \
+            $Attempt++; \
+            Start-Sleep -Seconds 5; \
+        } \
+    } while ($true)
 
 # Final stage
 FROM vmware-install-${TARGETARCH}
