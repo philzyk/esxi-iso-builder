@@ -1,6 +1,3 @@
-# Syntax version
-syntax = docker/dockerfile:1
-
 # Base image
 FROM ubuntu:20.04 AS base
 LABEL maintainer="Jeremy Combs <jmcombs@me.com>"
