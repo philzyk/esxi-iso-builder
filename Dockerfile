@@ -64,15 +64,15 @@ RUN apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # OS-specific installation based on architecture
-FROM base AS linux-amd64
+FROM base AS LINUX-AMD64
 ARG DOTNET_ARCH=x64
 ARG PS_ARCH=x64
 
-FROM base AS linux-arm64
+FROM base AS LINUX-ARM64
 ARG DOTNET_ARCH=arm64
 ARG PS_ARCH=arm64
 
-FROM base AS linux-arm
+FROM base AS LINUX-ARM
 ARG DOTNET_ARCH=arm
 ARG PS_ARCH=arm32
 
