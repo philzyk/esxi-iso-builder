@@ -123,7 +123,5 @@ RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Repo
     pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false" && \
     pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
-RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
-
 ENV DEBIAN_FRONTEND=dialog
 ENTRYPOINT ["pwsh"]
