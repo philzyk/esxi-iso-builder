@@ -27,7 +27,7 @@ RUN apt-get update \
         whois \
         less \
         p7zip-full \
-        unzip \  # Ensure unzip is available
+        unzip \
         libc6 \
         libgcc1 \
         libgssapi-krb5-2 \
