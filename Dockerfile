@@ -120,8 +120,6 @@ RUN pwsh -Command Install-Module -Name VMware.PowerCLI -Scope AllUsers -Reposito
 
 FROM vmware-install-${TARGETARCH} as vmware-install-common
 
-ARG VMWARECEIP=false
-
 # Switch to non-root user for remainder of build
 USER $USERNAME
 
@@ -132,7 +130,7 @@ ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /tmp/get-pip.py \
     && python3.7 -m pip install six psutil lxml pyopenssl \
     && rm /tmp/get-pip.py
-RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
+RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
 
 # Switching back to interactive after container build
