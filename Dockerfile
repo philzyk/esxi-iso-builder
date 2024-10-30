@@ -107,7 +107,20 @@ FROM msft-install as vmware-install-arm64
 
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 
+# Install unzip and create the necessary directory
+RUN apt-get update && \
+    apt-get install -y unzip && \
+    mkdir -p /usr/local/share/powershell/Modules
+
+# Unzip the PowerCLI package
 ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
+RUN unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules && \
+    rm /tmp/vmware-powercli.zip
+
+# Ensure PowerCLI is installed and available
+RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI" && \
+    pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false" && \
+    pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 FROM msft-install as vmware-install-amd64
 
@@ -118,13 +131,13 @@ RUN apt-get update && \
 
 # Unzip the PowerCLI package
 ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
-RUN unzip -l /tmp/vmware-powercli.zip && \
-    unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules && \
+RUN unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules && \
     rm /tmp/vmware-powercli.zip
-    
-FROM msft-install as vmware-install-amd64
 
-RUN pwsh -Command Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose
+# Ensure PowerCLI is installed and available
+RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI" && \
+    pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false" && \
+    pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 FROM vmware-install-${TARGETARCH} as vmware-install-common
 
@@ -137,8 +150,7 @@ ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /tmp/get-pip.py \
     && python3.7 -m pip install six psutil lxml pyopenssl \
     && rm /tmp/get-pip.py
-
-RUN pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false" && \
+RUN pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false" && \
     pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 ENV DEBIAN_FRONTEND=dialog
