@@ -1,14 +1,14 @@
-# Base image with Ubuntu 20.04
+# Base image
 FROM ubuntu:20.04 AS base
 LABEL Maintainer="Jeremy Combs <jmcombs@me.com>"
 
-# Setting environment to non-interactive for apt operations
+# Set environment to non-interactive for apt
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Arguments for architecture and .NET / PowerShell versioning
+# Dockerfile ARG variables for installation
 ARG TARGETARCH
 
-# Configure apt and install packages
+# Configure apt and install base packages
 RUN apt-get update \
     && apt-get -y install software-properties-common \
     && add-apt-repository ppa:deadsnakes/ppa -y \
@@ -26,7 +26,6 @@ RUN apt-get update \
         sudo \
         whois \
         less \
-        unzip \
         p7zip-full \
         libc6 \
         libgcc1 \
@@ -34,12 +33,9 @@ RUN apt-get update \
         libicu66 \
         libssl1.1 \
         libstdc++6 \
-        zlib1g \
-    && apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+        zlib1g
 
-# Configure en_US.UTF-8 Locale
+# Set Locale
 ENV LANGUAGE=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
@@ -47,59 +43,92 @@ RUN localedef -c -i en_US -f UTF-8 en_US.UTF-8 \
     && locale-gen en_US.UTF-8 \
     && dpkg-reconfigure locales
 
-# Defining non-root User
+# Define non-root User
 ARG USERNAME=coder
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-# Set up non-root User and grant sudo privileges
+# Set up non-root User and sudo privileges
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID --shell /usr/bin/pwsh --create-home $USERNAME \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL >> /etc/sudoers.d/$USERNAME \
+    && echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 WORKDIR /home/$USERNAME
 
-# .NET Core Runtime for VMware PowerCLI
+# Clean up apt
+RUN apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# OS-specific installation based on architecture
+FROM base AS linux-amd64
+ARG DOTNET_ARCH=x64
+ARG PS_ARCH=x64
+
+FROM base AS linux-arm64
+ARG DOTNET_ARCH=arm64
+ARG PS_ARCH=arm64
+
+FROM base AS linux-arm
+ARG DOTNET_ARCH=arm
+ARG PS_ARCH=arm32
+
+# Install .NET Core
+FROM linux-${TARGETARCH} AS msft-install
 ARG DOTNET_VERSION=3.1.32
-ARG DOTNET_PACKAGE=dotnet-runtime-${DOTNET_VERSION}-linux-${TARGETARCH}.tar.gz
+ARG DOTNET_PACKAGE=dotnet-runtime-${DOTNET_VERSION}-linux-${DOTNET_ARCH}.tar.gz
 ARG DOTNET_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Runtime/${DOTNET_VERSION}/${DOTNET_PACKAGE}
 ENV DOTNET_ROOT=/opt/microsoft/dotnet/${DOTNET_VERSION}
 ENV PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
-RUN curl -LO ${DOTNET_PACKAGE_URL} \
+RUN curl -L ${DOTNET_PACKAGE_URL} -o /tmp/dotnet.tar.gz \
     && mkdir -p ${DOTNET_ROOT} \
-    && tar zxf ${DOTNET_PACKAGE} -C ${DOTNET_ROOT} \
-    && rm ${DOTNET_PACKAGE}
+    && tar zxf /tmp/dotnet.tar.gz -C ${DOTNET_ROOT} \
+    && rm /tmp/dotnet.tar.gz
 
-# PowerShell Core 7.2 (LTS)
-RUN PS_PACKAGE_URL="https://github.com/PowerShell/PowerShell/releases/download/v7.2.0/powershell-7.2.0-linux-${TARGETARCH}.tar.gz" \
-    && PS_INSTALL_FOLDER="/opt/microsoft/powershell/7" \
-    && curl -L ${PS_PACKAGE_URL} -o /tmp/powershell.tar.gz \
+# Install PowerShell Core 7.2 (LTS)
+RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release?tag=lts | cut -d 'v' -f 2 | cut -d '.' -f 1) \
+    && PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} \
+    && PS_PACKAGE=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release?tag=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4 | xargs basename) \
+    && PS_PACKAGE_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release?tag=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4) \
+    && curl -LO ${PS_PACKAGE_URL} \
     && mkdir -p ${PS_INSTALL_FOLDER} \
-    && tar zxf /tmp/powershell.tar.gz -C ${PS_INSTALL_FOLDER} \
-    && rm /tmp/powershell.tar.gz \
-    && ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh
+    && tar zxf ${PS_PACKAGE} -C ${PS_INSTALL_FOLDER} \
+    && chmod a+x,o-w ${PS_INSTALL_FOLDER}/pwsh \
+    && ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh \
+    && rm ${PS_PACKAGE} \
+    && echo /usr/bin/pwsh >> /etc/shells
 
-# Add PowerCLI for both x64 and arm64 architectures
-FROM base AS vmware-install
+# VMware PowerCLI installation for arm64
+FROM msft-install as vmware-install-arm64
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
-RUN curl -Lo /tmp/vmware-powercli.zip ${POWERCLIURL} \
+RUN curl -L ${POWERCLIURL} -o /tmp/vmware-powercli.zip \
     && mkdir -p /usr/local/share/powershell/Modules \
-    && unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules \
+    && pwsh -Command Expand-Archive -Path /tmp/vmware-powercli.zip -DestinationPath /usr/local/share/powershell/Modules \
     && rm /tmp/vmware-powercli.zip
 
-# Switching to non-root user for remainder of build
+# VMware PowerCLI installation for amd64
+FROM msft-install as vmware-install-amd64
+RUN pwsh -Command Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose
+
+FROM vmware-install-${TARGETARCH} as vmware-install-common
+
+# Disable VMware CEIP
+ARG VMWARECEIP=false
+
+# Switch to non-root user
 USER $USERNAME
 
-# Install pip and Python dependencies for VMware PowerCLI
-ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /tmp/
+# Install Python 3 for VMware PowerCLI
+ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /tmp/get-pip.py
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /tmp/get-pip.py \
     && python3.7 -m pip install six psutil lxml pyopenssl \
     && rm /tmp/get-pip.py
-
-# Set PowerCLI configurations
-RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false \
+RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
+
+# Set back to interactive for container use
+ENV DEBIAN_FRONTEND=dialog
 
 # Setting entrypoint to PowerShell
 ENTRYPOINT ["pwsh"]
