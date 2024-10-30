@@ -121,14 +121,14 @@ RUN apt-get update && \
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 
 # Download and unzip the PowerCLI package
-RUN curl -o /tmp/vmware-powercli.zip ${POWERCLIURL} #&& \
-RUN ls -lah /tmp/vmware-powercli.zip #&& \
-RUN file /tmp/vmware-powercli.zip #&& \
-RUN unzip -t /tmp/vmware-powercli.zip #&& \
-RUN mkdir -p /usr/local/share/powershell/Modules #&& \
-RUN ls -lah /usr/local/share/powershell/Modules #&& \
-RUN unzip -v /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules #&& \
-RUN ls -lah /usr/local/share/powershell/Modules #&& \
+RUN curl -o /tmp/vmware-powercli.zip ${POWERCLIURL}
+RUN ls -lah /tmp/vmware-powercli.zip
+RUN file /tmp/vmware-powercli.zip
+RUN unzip -t /tmp/vmware-powercli.zip
+RUN mkdir -p /usr/local/share/powershell/Modules
+RUN ls -lah /usr/local/share/powershell/Modules
+RUN unzip -v /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules
+RUN ls -lah /usr/local/share/powershell/Modules
 RUN rm /tmp/vmware-powercli.zip
 
 FROM msft-install as vmware-install-amd64
