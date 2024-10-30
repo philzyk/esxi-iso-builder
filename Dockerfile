@@ -112,9 +112,10 @@ ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
 RUN apt-get update && \
     apt-get install -y unzip && \
     mkdir -p /usr/local/share/powershell/Modules && \
+    unzip -l /tmp/vmware-powercli.zip && \
     unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules && \
     rm /tmp/vmware-powercli.zip
-
+    
 FROM msft-install as vmware-install-amd64
 
 RUN pwsh -Command Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose
