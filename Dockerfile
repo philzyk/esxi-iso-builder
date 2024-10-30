@@ -40,18 +40,18 @@ RUN apt-get update && \
         libstdc++6 \
         p7zip-full \
         unzip \
-        zlib1g && \
+        zlib1g
     # Configure locale
-    localedef -c -i en_US -f UTF-8 en_US.UTF-8 && \
+RUN localedef -c -i en_US -f UTF-8 en_US.UTF-8 && \
     locale-gen en_US.UTF-8 && \
-    dpkg-reconfigure locales && \
+    dpkg-reconfigure locales
     # Set up non-root user
-    groupadd --gid $USER_GID $USERNAME && \
+RUN groupadd --gid $USER_GID $USERNAME && \
     useradd --uid $USER_UID --gid $USER_GID --shell /usr/bin/pwsh --create-home $USERNAME && \
     echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME && \
-    chmod 0440 /etc/sudoers.d/$USERNAME && \
+    chmod 0440 /etc/sudoers.d/$USERNAME
     # Clean up
-    apt-get autoremove -y && \
+RUN apt-get autoremove -y && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -115,9 +115,10 @@ USER $USERNAME
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 
 RUN curl -L https://bootstrap.pypa.io/pip/3.7/get-pip.py | python3.7 && \
-    python3.7 -m pip install six psutil lxml pyopenssl && \
-    pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Repository PSGallery -Force" && \
+    python3.7 -m pip install six psutil lxml pyopenssl
+RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Repository PSGallery -Force" && \
     pwsh -Command "Import-Module VMware.PowerCLI" && \
+    pwsh -Command "Set-PowerCLIConfiguration -InvalidCertificateAction Fail" && \
     pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false" && \
     pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
