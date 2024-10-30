@@ -1,3 +1,6 @@
+# Syntax version
+syntax = docker/dockerfile:1
+
 # Base image
 FROM ubuntu:20.04 AS base
 LABEL maintainer="Jeremy Combs <jmcombs@me.com>"
@@ -106,14 +109,13 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 
 # VMware PowerCLI installation stages
 FROM msft-install AS vmware-install-arm64
-ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
-RUN curl -L ${POWERCLIURL} -o /tmp/vmware-powercli.zip && \
-    mkdir -p /usr/local/share/powershell/Modules && \
-    unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules && \
-    rm /tmp/vmware-powercli.zip
+# For ARM64, we'll use PowerShell Gallery with a specific version
+RUN pwsh -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted" && \
+    pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force"
 
 FROM msft-install AS vmware-install-amd64
-RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose"
+RUN pwsh -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted" && \
+    pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force"
 
 # Final stage
 FROM vmware-install-${TARGETARCH}
