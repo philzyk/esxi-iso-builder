@@ -102,8 +102,8 @@ ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830
 RUN mkdir -p /usr/local/share/powershell/Modules
 RUN curl -L ${POWERCLIURL} -o /tmp/vmware-powercli.zip
 RUN ls -lah /usr/local/share/powershell/Modules
-RUN unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules && \
-    rm /tmp/vmware-powercli.zip
+RUN unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules
+RUN rm /tmp/vmware-powercli.zip
 
 FROM msft-install AS vmware-install-amd64
 RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose"
