@@ -156,14 +156,20 @@ FROM vmware-install-${TARGETARCH}
 
 USER $USERNAME
 
-# Install Python dependencies for VMware PowerCLI
+# Install pip for Python 3.7 and dependencies for VMware PowerCLI
 ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /tmp/get-pip.py
 RUN python3.7 /tmp/get-pip.py && \
     python3.7 -m pip install six psutil lxml pyopenssl && \
-    rm /tmp/get-pip.py && \
-    # Configure PowerCLI
-    pwsh -Command "if ('${VMWARECEIP}' -eq 'true') { Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$true -Confirm:\$false } else { Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false }" && \
-    pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
+    rm /tmp/get-pip.py
+
+# Configure VMware CEIP participation
+RUN pwsh -Command "$ErrorActionPreference = 'Stop'; if ('${VMWARECEIP}' -eq 'true') { Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$true -Confirm:\$false } else { Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false }"
+
+# Set Python path for PowerCLI
+RUN pwsh -Command "$ErrorActionPreference = 'Stop'; Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
+
+# Ensure PowerShell is functioning as expected
+RUN pwsh -Command "Write-Output 'PowerShell is set up correctly'"
 
 ENV DEBIAN_FRONTEND=dialog
 
