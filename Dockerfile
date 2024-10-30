@@ -96,13 +96,14 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 
 # Architecture-specific PowerCLI installation
 FROM msft-install AS vmware-install-arm64
-
+RUN apt-get update && \
+    apt-get -y install p7zip-full curl
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
-
 RUN mkdir -p /usr/local/share/powershell/Modules
 RUN curl -L ${POWERCLIURL} -o /tmp/vmware-powercli.zip
+RUN file /tmp/vmware-powercli.zip
+RUN 7z e /tmp/vmware-powercli.zip -0 /usr/local/share/powershell/Modules
 RUN ls -lah /usr/local/share/powershell/Modules
-RUN unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules
 RUN rm /tmp/vmware-powercli.zip
 
 FROM msft-install AS vmware-install-amd64
