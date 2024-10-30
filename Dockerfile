@@ -109,10 +109,16 @@ ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830
 
 ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
 
+FROM msft-install as vmware-install-amd64
+
+# Install unzip and create the necessary directory
 RUN apt-get update && \
     apt-get install -y unzip && \
-    mkdir -p /usr/local/share/powershell/Modules && \
-    unzip -l /tmp/vmware-powercli.zip && \
+    mkdir -p /usr/local/share/powershell/Modules
+
+# Unzip the PowerCLI package
+ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
+RUN unzip -l /tmp/vmware-powercli.zip && \
     unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules && \
     rm /tmp/vmware-powercli.zip
     
