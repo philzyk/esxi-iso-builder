@@ -151,10 +151,15 @@ RUN python3.7 /tmp/get-pip.py \
 #RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false \
 #    && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
 
-RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Repository PSGallery -Force" \
-    && pwsh -Command "Import-Module VMware.PowerCLI" \
-    && pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false" \
-    && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
+#RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Repository PSGallery -Force" \
+#    && pwsh -Command "Import-Module VMware.PowerCLI" \
+#    && pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false" \
+#    && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
+
+RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Repository PSGallery -Force"
+RUN pwsh -Command "Import-Module VMware.PowerCLI"
+RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false"
+RUN pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 # Switching back to interactive after container build
 ENV DEBIAN_FRONTEND=dialog
