@@ -159,4 +159,3 @@ RUN pwsh -Command "Import-Module VMware.PowerCLI; Set-PowerCLIConfiguration -Sco
 
 ENV DEBIAN_FRONTEND=dialog
 ENTRYPOINT ["pwsh"]
-``
