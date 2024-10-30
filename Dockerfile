@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1
 
+# Register QEMU for emulation (this should be done in your build script or CI/CD pipeline)
+# docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
 FROM multiarch/qemu-user-static:register --reset
 FROM ubuntu:20.04 AS base
 LABEL Maintainer = "Jeremy Combs <jmcombs@me.com>"
