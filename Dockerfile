@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
 
+FROM multiarch/qemu-user-static:register --reset
 FROM ubuntu:20.04 AS base
 LABEL Maintainer = "Jeremy Combs <jmcombs@me.com>"
 
-# Switching to non-interactive for cotainer build
+# Switching to non-interactive for container build
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Dockerfile ARG variables set automatically to aid in software installation
