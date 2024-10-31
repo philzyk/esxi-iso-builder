@@ -118,8 +118,8 @@ ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN curl -L https://bootstrap.pypa.io/pip/3.7/get-pip.py | python3.7 && \
     python3.7 -m pip install six psutil lxml pyopenssl
 #RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Repository PSGallery -Force"
-RUN pwsh -Command "Import-Module VMware.PowerCLI"
-RUN pwsh -Command "Set-PowerCLIConfiguration -InvalidCertificateAction Fail -Confirm:\$false -ErrorAction Stop"
+#RUN pwsh -Command "Import-Module VMware.PowerCLI"
+#RUN pwsh -Command "Set-PowerCLIConfiguration -InvalidCertificateAction Fail -Confirm:\$false -ErrorAction Stop"
 RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false"
 RUN pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
