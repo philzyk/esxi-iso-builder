@@ -124,7 +124,7 @@ USER $USERNAME
 RUN mkdir -p /home/$USERNAME/.local/bin && chown ${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin && chmod 755 /home/$USERNAME/.local/bin
 # Python 3 for VMware PowerCLI
 # apt package(s): gcc, wget, python3, python3-dev, python3-distutils
-ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /tmp/
+ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /home/$USERNAME/.local/bin
 RUN ls -lah /home/$USERNAME/.local/bin/get-pip.py
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /tmp/get-pip.py \
