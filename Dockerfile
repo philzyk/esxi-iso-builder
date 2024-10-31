@@ -121,20 +121,19 @@ ARG VMWARECEIP=false
 
 # Switch to non-root user for remainder of build
 USER $USERNAME
-
+RUN mkdir -p /home/$USERNAME/.local/bin && chown=${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin && chmod 755 /home/$USERNAME/.local/bin
 # Python 3 for VMware PowerCLI
 # apt package(s): gcc, wget, python3, python3-dev, python3-distutils
 ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /tmp/
-RUN ls -lah /tmp/get-pip.py
+RUN ls -lah /home/$USERNAME/.local/bin/get-pip.py
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
-USER root
 RUN python3.7 /tmp/get-pip.py \
     && python3.7 -m pip install --no-cache-dir  six psutil lxml pyopenssl \
-    && rm /tmp/get-pip.py
-USER $USERNAME
+    && rm /home/$USERNAME/.local/bin/get-pip.py
 RUN mkdir -p /home/$USERNAME/.local/share/powershell/Modules
 ###RUN cp -rfp /usr/local/share/powershell/Modules /home/$USERNAME/.local/share/powershell/Modules
-RUN pwsh $env:PSModulePath
+RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:' + $env:PSModulePath, 'User')"
+RUN pwsh -Command "echo $env:PSModulePath"
 RUN ls -lah /usr/local/share/powershell/Modules
 RUN pwsh -Command Import-Module -Name /usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1
 RUN pwsh -Command Import-Module VMWare.PowerCLI
