@@ -136,7 +136,8 @@ ARG MODULE_PATH="/usr/local/share/powershell/Modules"
 RUN wget -O /tmp/PowerCLI.zip "$POWERCLI_URL"
 RUN mkdir -p "$MODULE_PATH"
 #RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
-RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
+RUN pwsh -Command "Expand-Archive -LiteralPath '/tmp/PowerCLI.zip' -DestinationPath "$MODULE_PATH" -PassThru"
+#RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN rm /tmp/PowerCLI.zip
 #RUN find /usr/local/share/powershell/Modules -type f | while read -r file; do \
 #        # Sanitize filename by removing newline characters and replacing backslashes with slashes
@@ -201,19 +202,48 @@ RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Reposit
 
 FROM vmware-install-${TARGETARCH} as vmware-install-common
 
+#ARG VMWARECEIP=false
+# Switch to non-root user for remainder of build
+#USER $USERNAME
+#RUN mkdir -p /home/$USERNAME/.local/bin && chown ${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin && chmod 755 /home/$USERNAME/.local/bin
+# Python 3 for VMware PowerCLI
+# apt package(s): gcc, wget, python3, python3-dev, python3-distutils
+#ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /home/$USERNAME/.local/bin
+#ENV PATH=${PATH}:/home/$USERNAME/.local/bin
+#RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
+#    && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
+#    && rm /home/$USERNAME/.local/bin/get-pip.py
+#RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
+#    && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
+
+
 ARG VMWARECEIP=false
+
 # Switch to non-root user for remainder of build
 USER $USERNAME
-RUN mkdir -p /home/$USERNAME/.local/bin && chown ${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin && chmod 755 /home/$USERNAME/.local/bin
+
+# Create local bin directory for user
+RUN mkdir -p /home/$USERNAME/.local/bin \
+    && chown ${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin \
+    && chmod 755 /home/$USERNAME/.local/bin
+
 # Python 3 for VMware PowerCLI
 # apt package(s): gcc, wget, python3, python3-dev, python3-distutils
 ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /home/$USERNAME/.local/bin
+
+# Update PATH
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
+
+# Install pip and necessary Python packages
 RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
     && rm /home/$USERNAME/.local/bin/get-pip.py
-RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
-    && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
+
+# Configure PowerCLI
+RUN pwsh -Command " \
+    Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false; \
+    Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
+
 
 # Switching back to interactive after container build
 ENV DEBIAN_FRONTEND=dialog
