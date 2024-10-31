@@ -138,27 +138,42 @@ RUN mkdir -p "$MODULE_PATH"
 #RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
 RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN rm /tmp/PowerCLI.zip
+#RUN find /usr/local/share/powershell/Modules -type f | while read -r file; do \
+#        # Sanitize filename by removing newline characters and replacing backslashes with slashes
+#        sanitized_file="$(echo "$file" | tr -d '\n' | tr '\\' '/')"; \
+#        # Create target directory
+#        target_dir="$(dirname "$sanitized_file")"; \
+#        mkdir -p "$target_dir"; \
+#        # Move the file to the new path
+#        mv -v "$file" "$sanitized_file" || echo "Could not move: $file to $sanitized_file"; \
+#    done
 RUN find /usr/local/share/powershell/Modules -type f | while read -r file; do \
-        # Sanitize filename by removing newline characters and replacing backslashes with slashes
         sanitized_file="$(echo "$file" | tr -d '\n' | tr '\\' '/')"; \
-        # Create target directory
         target_dir="$(dirname "$sanitized_file")"; \
         mkdir -p "$target_dir"; \
-        # Move the file to the new path
-        mv -v "$file" "$sanitized_file" || echo "Could not move: $file to $sanitized_file"; \
+        if [ "$file" != "$sanitized_file" ]; then \
+            mv -v "$file" "$sanitized_file" || echo "Failed to move: $file to $sanitized_file"; \
+        fi; \
     done
-RUN ls -lah "$MODULE_PATH"
+
+FROM mcr.microsoft.com/powershell:latest
+# Install VMware PowerCLI
+RUN pwsh -Command " \
+    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; Get-Module -ListAvailable VMware.PowerCLI; Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -AllowClobber; \
+    Import-Module VMware.PowerCLI -Verbose"
+    
+# RUN ls -lah "$MODULE_PATH"
 # Verify PowerCLI installation
-RUN pwsh -Command "Import-Module VMware.PowerCLI"
+# RUN pwsh -Command "Import-Module VMware.PowerCLI"
 # RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
 # Set PowerCLI CEIP to not participate
 RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false"
 
 # Set PowerCLI as the default module for PowerShell
-ENV PSModulePath="$MODULE_PATH:$PSModulePath"
+# ENV PSModulePath="$MODULE_PATH:$PSModulePath"
 
 # Test PowerCLI module availability
-RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI"
+# RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI"
 
 ####POWERCLI-arm####
 # Switch to root user to change permissions
