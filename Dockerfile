@@ -127,7 +127,7 @@ ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py
 RUN ls -lah /tmp/get-pip.py
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /tmp/get-pip.py \
-    && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
+    && python3.7 -m pip install --no-cache-dir --user six psutil lxml pyopenssl \
     && rm /tmp/get-pip.py
 RUN pwsh -Command Import-Module VMWare.PowerCLI    
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
