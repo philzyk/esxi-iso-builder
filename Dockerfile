@@ -25,7 +25,7 @@ RUN apt-get update \
         sudo \
         whois \
         unzip \
-        7zip-full \
+        p7zip-full \
         file \
         less \
         libc6 \
