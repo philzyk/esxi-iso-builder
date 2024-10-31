@@ -132,10 +132,11 @@ RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && rm /home/$USERNAME/.local/bin/get-pip.py
 RUN mkdir -p /home/$USERNAME/.local/share/powershell/Modules
 RUN cp -rfp /usr/local/share/powershell/Modules/* /home/$USERNAME/.local/share/powershell/Modules/
+ENV PSModulePath="/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:$PSModulePath"
 RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
 RUN pwsh -Command "Write-Output $env:PSModulePath"
-RUN ls -lah /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/
-RUN pwsh -Command "Import-Module -Name /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1"
+RUN ls -lah /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/13.3.0.24145081/VMware.PowerCLI/
+RUN pwsh -Command "Import-Module -Name /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/13.3.0.24145081/VMware.PowerCLI/VMware.PowerCLI.psd1"
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false" \
     && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
