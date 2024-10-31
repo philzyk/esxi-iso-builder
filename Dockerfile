@@ -109,7 +109,7 @@ RUN mkdir -p /tmp/7zip && \
     tar -xf 7z2408-linux-arm64.tar.xz -C /tmp/7zip && \
     rm -rf /tmp/7z2408-linux-arm64.tar.xz && \
     mv /tmp/7zip/7zz /usr/local/bin/7zz && \
-    rm -rf /tmp/7zip/
+    rm -rf /tmp/7zip/ && \
     chmod +x /usr/local/bin/7zz
 
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
