@@ -127,6 +127,13 @@ ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
     && rm /home/$USERNAME/.local/bin/get-pip.py
+
+# Set the PSModulePath environment variable globally
+ENV PSModulePath="/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules:$PSModulePath"
+
+# Verify that PSModulePath is set correctly in PowerShell
+RUN pwsh -Command "Write-Output $env:PSModulePath"
+
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
