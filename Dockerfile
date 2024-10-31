@@ -106,7 +106,8 @@ ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830
 ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
 RUN apt-get update && apt-get install -y unzip file
 RUN file /tmp/vmware-powercli.zip
-RUN mkdir -p /usr/local/share/powershell/Modules
+RUN mkdir -p /usr/local/share/powershell/Modules \
+    && chmod -R 755 /usr/local/share/powershell/Modules
 RUN unzip /tmp/vmware-powercli.zip -d /usr/local/share/powershell/Modules
 RUN rm /tmp/vmware-powercli.zip
 RUN pwsh -Command '$PSVersionTable.PSVersion'
