@@ -134,13 +134,13 @@ RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
 USER root
 
 # Change permissions to allow non-root access
-RUN chmod -R o+r /usr/local/share/powershell/Modules
+RUN chmod -R 755 /usr/local/share/powershell/Modules
 
 # Optionally, switch back to the non-root user if needed
 USER $USERNAME
 
 RUN ls -lah /usr/local/share/powershell/Modules
-RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules:' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
+RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
 # Verify that PSModulePath is set correctly in PowerShell
 # Set the PSModulePath environment variable
 ENV PSModulePath="/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules"
