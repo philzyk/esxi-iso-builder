@@ -126,7 +126,7 @@ USER $USERNAME
 ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /tmp/
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /tmp/get-pip.py \
-    && python3.7 -m pip install six psutil lxml pyopenssl \
+    && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
     && rm /tmp/get-pip.py
     
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
