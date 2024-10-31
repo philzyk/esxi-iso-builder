@@ -119,14 +119,14 @@ ARG VMWARECEIP=false
 
 # Switch to non-root user for remainder of build
 USER $USERNAME
-
+RUN mkdir -p /home/$USERNAME/.local/bin && chown ${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin && chmod 755 /home/$USERNAME/.local/bin
 # Python 3 for VMware PowerCLI
 # apt package(s): gcc, wget, python3, python3-dev, python3-distutils
-ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/get-pip.py /home/$USERNAME/.local/bin
+ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /home/$USERNAME/.local/bin
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
-    && rm /tmp/get-pip.py
+    && rm /home/$USERNAME/.local/bin/get-pip.py
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
