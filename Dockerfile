@@ -132,7 +132,7 @@ RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && rm /home/$USERNAME/.local/bin/get-pip.py
 RUN mkdir -p /home/$USERNAME/.local/share/powershell/Modules
 ###RUN cp -rfp /usr/local/share/powershell/Modules /home/$USERNAME/.local/share/powershell/Modules
-RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:' + $env:PSModulePath, 'User')"
+RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
 RUN pwsh -Command "echo $env:PSModulePath"
 RUN ls -lah /usr/local/share/powershell/Modules
 RUN pwsh -Command Import-Module -Name /usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1
