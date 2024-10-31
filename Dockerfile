@@ -130,7 +130,7 @@ RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
 
 # Set the PSModulePath environment variable globally
 ENV PSModulePath="/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules:$PSModulePath"
-
+RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules:' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
 # Verify that PSModulePath is set correctly in PowerShell
 RUN pwsh -Command "Write-Output $env:PSModulePath"
 
