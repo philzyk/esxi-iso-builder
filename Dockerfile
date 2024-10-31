@@ -104,25 +104,26 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 FROM msft-install as vmware-install-arm64
 
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
-
-ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
-RUN 7z x /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules && rm /tmp/vmware-powercli.zip
+RUN mkdir -p /usr/local/share/powershell/Modules
+ADD ${POWERCLIURL} /usr/local/share/powershell/Modules/vmware-powercli.zip
+RUN 7z x /usr/local/share/powershell/Modules/vmware-powercli.zip && rm /usr/local/share/powershell/Modules/vmware-powercli.zip
+RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 
 ####POWERCLI-arm####
 # Switch to root user to change permissions
-USER root
+#USER root
 # Change permissions to allow non-root access
-RUN chmod -R 755 /usr/local/share/powershell/Modules
+#RUN chmod -R 755 /usr/local/share/powershell/Modules
 # Optionally, switch back to the non-root user if needed
-USER $USERNAME
-RUN ls -lah /usr/local/share/powershell/Modules
-RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
+#USER $USERNAME
+#RUN ls -lah /usr/local/share/powershell/Modules
+#RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
 # Verify that PSModulePath is set correctly in PowerShell
 # Set the PSModulePath environment variable
-ENV PSModulePath="/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules"
+# ENV PSModulePath="/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules"
 # Verify that PSModulePath is set correctly in PowerShell
-RUN pwsh -Command "Write-Host 'PSModulePath is set to:' $env:PSModulePath"
-RUN pwsh -Command "Write-Output $env:PSModulePath"
+#RUN pwsh -Command "Write-Host 'PSModulePath is set to:' $env:PSModulePath"
+#RUN pwsh -Command "Write-Output $env:PSModulePath"
 ###RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 ####POWERCLI-arm####
