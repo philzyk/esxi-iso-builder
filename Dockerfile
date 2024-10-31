@@ -110,7 +110,6 @@ RUN mkdir -p /usr/local/share/powershell/Modules \
 RUN 7z x /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules
 RUN rm /tmp/vmware-powercli.zip
 RUN pwsh -Command '$PSVersionTable.PSVersion'
-RUN pwsh -Command Expand-Archive -Path /tmp/vmware-powercli.zip -DestinationPath /usr/local/share/powershell/Modules
 
 ##ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
 ##RUN pwsh -Command '$PSVersionTable.PSVersion'
