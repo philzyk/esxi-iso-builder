@@ -103,9 +103,9 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 
 FROM msft-install as vmware-install-arm64
 
-ARG 7ZIPURL=https://7-zip.org/a/7z2408-linux-arm64.tar.xz
-ADD ${7ZIPURL} /tmp/7z2408-linux-arm64.tar.xz
-RUN tar -xf /tmp/7z2408-linux-arm64.tar.xz && \
+ARG ARCH_URL=https://7-zip.org/a/7z2408-linux-arm64.tar.xz
+ADD ${ARCH_URL} /tmp/7z2408-linux-arm64.tar.xz
+RUN tar -xf /tmp/7z2408-linux-arm64.tar.xz -C /tmp && \
     rm /tmp/7z2408-linux-arm64.tar.xz && \
     chmod +x /tmp/7z && \
     mv /tmp/7z /usr/local/bin/
