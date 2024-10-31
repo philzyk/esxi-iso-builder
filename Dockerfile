@@ -125,9 +125,9 @@ USER $USERNAME
 # apt package(s): gcc, wget, python3, python3-dev, python3-distutils
 ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /tmp/
 RUN ls -lah /tmp/get-pip.py
-RUN mkdir -p /home/$USERNAME/.local/lib && chown -R $USERNAME:$USERNAME /home/$USERNAME
-USER $USERNAME
-ENV PATH=${PATH}:/home/$USERNAME/.local/bin
+RUN mkdir -p /home/coder/.local/lib && chown -R coder:coder /home/$USERNAME
+USER coder
+ENV PATH=${PATH}:/home/coder/.local/bin
 RUN python3.7 /tmp/get-pip.py \
     && python3.7 -m pip install --no-cache-dir --user six psutil lxml pyopenssl \
     && rm /tmp/get-pip.py
