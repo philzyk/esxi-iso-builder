@@ -135,14 +135,18 @@ ARG MODULE_PATH="/usr/local/share/powershell/Modules"
 # Download and install PowerCLI
 RUN wget -O /tmp/PowerCLI.zip "$POWERCLI_URL"
 RUN mkdir -p "$MODULE_PATH"
-RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
+#RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
 RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN rm /tmp/PowerCLI.zip
-
+RUN find /usr/local/share/powershell/Modules -type f | while read -r file; do \
+        target="$(echo "$file" | sed 's/\\/\//g')"; \
+        mkdir -p "$(dirname "$target")"; \
+        mv -v "$file" "$target"; \
+    done
 RUN ls -lah "$MODULE_PATH"
 # Verify PowerCLI installation
-# RUN pwsh -Command "Import-Module VMware.PowerCLI; Write-Output 'PowerCLI Installed Successfully'"
-RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
+RUN pwsh -Command "Import-Module VMware.PowerCLI"
+# RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
 # Set PowerCLI CEIP to not participate
 RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false"
 
