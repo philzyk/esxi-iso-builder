@@ -61,10 +61,6 @@ RUN apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-FROM base AS linux-amd64
-ARG DOTNET_ARCH=x64
-ARG PS_ARCH=x64
-
 FROM base AS linux-arm64
 ARG DOTNET_ARCH=arm64
 ARG PS_ARCH=arm64
@@ -72,6 +68,10 @@ ARG PS_ARCH=arm64
 FROM base AS linux-arm
 ARG DOTNET_ARCH=arm
 ARG PS_ARCH=arm32
+
+FROM base AS linux-amd64
+ARG DOTNET_ARCH=x64
+ARG PS_ARCH=x64
 
 FROM linux-${TARGETARCH} AS msft-install
 
@@ -107,6 +107,8 @@ ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830
 RUN mkdir -p /usr/local/share/powershell/Modules
 ADD ${POWERCLIURL} /usr/local/share/powershell/Modules/vmware-powercli.zip
 RUN 7z x /usr/local/share/powershell/Modules/vmware-powercli.zip && rm /usr/local/share/powershell/Modules/vmware-powercli.zip
+RUN ls -lah /usr/local/share/powershell/Modules
+RUN ls -lah /usr/local/share/powershell/Modules/
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 
 ####POWERCLI-arm####
