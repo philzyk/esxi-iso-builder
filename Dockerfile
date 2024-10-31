@@ -133,8 +133,11 @@ RUN python3.7 /tmp/get-pip.py \
     && rm /tmp/get-pip.py
 USER $USERNAME
 RUN mkdir -p /home/$USERNAME/.local/share/powershell/Modules
-RUN cp -rfp /usr/local/share/powershell/Modules /home/$USERNAME/.local/share/powershell/Modules
-RUN pwsh -Command Import-Module VMWare.PowerCLI    
+###RUN cp -rfp /usr/local/share/powershell/Modules /home/$USERNAME/.local/share/powershell/Modules
+RUN pwsh $env:PSModulePath
+RUN ls -lah /usr/local/share/powershell/Modules
+RUN pwsh -Command Import-Module -Name /usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1
+RUN pwsh -Command Import-Module VMWare.PowerCLI
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
 
