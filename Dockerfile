@@ -27,6 +27,7 @@ RUN apt-get update \
         unzip \
         p7zip-full \
         file \
+        wget \
         less \
         libc6 \
         libgcc1 \
@@ -124,8 +125,30 @@ FROM msft-install as vmware-install-arm64
 #RUN ls -lah /usr/local/share/powershell/Modules
 #RUN ls -lah /usr/local/share/powershell/Modules/
 ##RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
-RUN pwsh -Command "Install-PSResource -Name VMware.PowerCLI -Version 13.0.0.20829139"
-RUN pwsh -Command "Import-Module VMWare.PowerCLI"
+#RUN pwsh -Command "Install-PSResource -Name VMware.PowerCLI -Version 13.0.0.20829139"
+#RUN pwsh -Command "Import-Module VMWare.PowerCLI"
+# Define the URL for PowerCLI download and destination directory
+
+ARG POWERCLI_URL="https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip"
+ARG MODULE_PATH="/usr/local/share/powershell/Modules"
+
+# Download and install PowerCLI
+RUN wget -O /tmp/PowerCLI.zip "$POWERCLI_URL" && \
+    mkdir -p "$MODULE_PATH" && \
+    unzip /tmp/PowerCLI.zip -d "$MODULE_PATH" && \
+    rm /tmp/PowerCLI.zip
+
+# Verify PowerCLI installation
+RUN pwsh -Command "Import-Module VMware.PowerCLI; Write-Output 'PowerCLI Installed Successfully'"
+
+# Set PowerCLI CEIP to not participate
+RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false"
+
+# Set PowerCLI as the default module for PowerShell
+ENV PSModulePath="$MODULE_PATH:$PSModulePath"
+
+# Test PowerCLI module availability
+RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI"
 
 ####POWERCLI-arm####
 # Switch to root user to change permissions
