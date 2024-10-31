@@ -106,14 +106,14 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 
 FROM msft-install as vmware-install-arm64
 
-#ARG ARCH_URL=https://7-zip.org/a/7z2408-linux-arm64.tar.xz
-#ADD ${ARCH_URL} /tmp/7z2408-linux-arm64.tar.xz
-#RUN mkdir -p /tmp/7zip && \
-#    tar -xf /tmp/7z2408-linux-arm64.tar.xz -C /tmp/7zip && \
-#    rm -rf /tmp/7z2408-linux-arm64.tar.xz && \
-#    mv /tmp/7zip/7zz /usr/local/bin/7zz && \
-#    rm -rf /tmp/7zip/ && \
-#    chmod +x /usr/local/bin/7zz
+ARG ARCH_URL=https://7-zip.org/a/7z2408-linux-arm64.tar.xz
+ADD ${ARCH_URL} /tmp/7z2408-linux-arm64.tar.xz
+RUN mkdir -p /tmp/7zip && \
+    tar -xf /tmp/7z2408-linux-arm64.tar.xz -C /tmp/7zip && \
+    rm -rf /tmp/7z2408-linux-arm64.tar.xz && \
+    mv /tmp/7zip/7zz /usr/local/bin/7zz && \
+    rm -rf /tmp/7zip/ && \
+    chmod +x /usr/local/bin/7zz
 
 #ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 #RUN mkdir -p /usr/local/share/powershell/Modules
@@ -135,8 +135,8 @@ ARG MODULE_PATH="/usr/local/share/powershell/Modules"
 # Download and install PowerCLI
 RUN wget -O /tmp/PowerCLI.zip "$POWERCLI_URL"
 RUN mkdir -p "$MODULE_PATH"
-#RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{print $6}' | sed 's/\\/\\//g')
-RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
+RUN 7zz rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{print $6}' | sed 's/\\/\\//g')
+RUN 7zz x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN rm /tmp/PowerCLI.zip
 
 RUN ls -lah "$MODULE_PATH"
