@@ -135,15 +135,9 @@ ARG MODULE_PATH="/usr/local/share/powershell/Modules"
 # Download and install PowerCLI
 RUN wget -O /tmp/PowerCLI.zip "$POWERCLI_URL"
 RUN mkdir -p "$MODULE_PATH"
-#RUN unzip /tmp/PowerCLI.zip -d "$MODULE_PATH"
+#RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{print $6}' | sed 's/\\/\\//g')
 RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN rm /tmp/PowerCLI.zip
-RUN cd /usr/local/share/powershell/Modules && \
-    for file in *\\*; do \
-        target="${file//\\//}"; \
-        mkdir -p "${target%/*}"; \
-        mv -v "$file" "$target"; \
-    done
 
 RUN ls -lah "$MODULE_PATH"
 # Verify PowerCLI installation
