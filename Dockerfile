@@ -24,7 +24,7 @@ RUN apt-get update \
         python3.7-distutils \
         sudo \
         whois \
-        p7zip-full\
+        unzip \
         less \
         libc6 \
         libgcc1 \
@@ -103,6 +103,13 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 
 FROM msft-install as vmware-install-arm64
 
+ARG 7ZIPURL=https://7-zip.org/a/7z2408-linux-arm64.tar.xz
+ADD ADD ${7ZIPURL} /tmp/7z2408-linux-arm64.tar.xz
+RUN tar -xf /tmp/7z2408-linux-arm64.tar.xz && \
+    rm /tmp/7z2408-linux-arm64.tar.xz && \
+    chmod +x /tmp/7z && \
+    mv /tmp/7z /usr/local/bin/
+
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 RUN mkdir -p /usr/local/share/powershell/Modules
 ADD ${POWERCLIURL} /usr/local/share/powershell/Modules/vmware-powercli.zip
@@ -110,6 +117,8 @@ RUN 7z x /usr/local/share/powershell/Modules/vmware-powercli.zip -o/usr/local/sh
 RUN ls -lah /usr/local/share/powershell/Modules
 RUN ls -lah /usr/local/share/powershell/Modules/
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
+/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1
+
 
 ####POWERCLI-arm####
 # Switch to root user to change permissions
