@@ -116,7 +116,7 @@ ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830
 RUN mkdir -p /usr/local/share/powershell/Modules
 ADD ${POWERCLIURL} /usr/local/share/powershell/Modules/vmware-powercli.zip
 RUN ls -lah /usr/local/share/powershell/Modules/vmware-powercli.zip
-RUN unzip /usr/local/share/powershell/Modules/vmware-powercli.zip -d /usr/local/share/powershell/Modules/ 
+RUN unzip /usr/local/share/powershell/Modules/vmware-powercli.zip -d /usr/local/share/powershell/Modules
 ##RUN rm /usr/local/share/powershell/Modules/vmware-powercli.zip
 RUN ls -lah /usr/local/share/powershell/Modules
 RUN ls -lah /usr/local/share/powershell/Modules/
