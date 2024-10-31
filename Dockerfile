@@ -138,6 +138,12 @@ RUN mkdir -p "$MODULE_PATH"
 #RUN unzip /tmp/PowerCLI.zip -d "$MODULE_PATH"
 RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN rm /tmp/PowerCLI.zip
+RUN cd /usr/local/share/powershell/Modules && \
+    for file in *\\*; do \
+        target="${file//\\//}"; \
+        mkdir -p "${target%/*}"; \
+        mv -v "$file" "$target"; \
+    done
 
 # Verify PowerCLI installation
 RUN pwsh -Command "Import-Module VMware.PowerCLI; Write-Output 'PowerCLI Installed Successfully'"
