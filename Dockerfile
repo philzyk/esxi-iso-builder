@@ -106,7 +106,7 @@ FROM msft-install as vmware-install-arm64
 ARG ARCH_URL=https://7-zip.org/a/7z2408-linux-arm64.tar.xz
 ADD ${ARCH_URL} /tmp/7z2408-linux-arm64.tar.xz
 RUN mkdir -p /tmp/7zip && \
-    tar -xf 7z2408-linux-arm64.tar.xz -C /tmp/7zip && \
+    tar -xf /tmp/7z2408-linux-arm64.tar.xz -C /tmp/7zip && \
     rm -rf /tmp/7z2408-linux-arm64.tar.xz && \
     mv /tmp/7zip/7zz /usr/local/bin/7zz && \
     rm -rf /tmp/7zip/ && \
