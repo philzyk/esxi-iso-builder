@@ -107,7 +107,7 @@ ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
 RUN apt-get update && apt-get install -y p7zip-full
 RUN mkdir -p /usr/local/share/powershell/Modules \
     && chmod -R 755 /usr/local/share/powershell/Modules
-RUN RUN 7z x /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules
+RUN 7z x /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules
 RUN rm /tmp/vmware-powercli.zip
 RUN pwsh -Command '$PSVersionTable.PSVersion'
 RUN pwsh -Command Expand-Archive -Path /tmp/vmware-powercli.zip -DestinationPath /usr/local/share/powershell/Modules
