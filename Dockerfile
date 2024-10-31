@@ -105,7 +105,7 @@ FROM msft-install as vmware-install-arm64
 
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
-ADD mkdir -p /usr/local/share/powershell/Modules
+RUN mkdir -p /usr/local/share/powershell/Modules
 RUN ls -lah /home/coder/.local/share/powershell/Modules
 RUN 7z x /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules
 RUN rm /tmp/vmware-powercli.zip
