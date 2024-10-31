@@ -24,6 +24,7 @@ RUN apt-get update \
         python3.7-distutils \
         sudo \
         whois \
+        p7zip-full\
         less \
         libc6 \
         libgcc1 \
@@ -31,7 +32,6 @@ RUN apt-get update \
         libicu66 \
         libssl1.1 \
         libstdc++6 \
-        p7zip-full \
         zlib1g
 
 # Configure en_US.UTF-8 Locale
@@ -104,11 +104,9 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 FROM msft-install as vmware-install-arm64
 
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
+
 ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
-RUN mkdir -p /usr/local/share/powershell/Modules
-RUN ls -lah /usr/local/share/powershell/Modules
-RUN 7z x /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules
-RUN rm /tmp/vmware-powercli.zip
+RUN 7z x /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules && rm /tmp/vmware-powercli.zip
 
 FROM msft-install as vmware-install-amd64
 
@@ -121,25 +119,17 @@ ARG VMWARECEIP=false
 
 # Switch to non-root user for remainder of build
 USER $USERNAME
-RUN mkdir -p /home/$USERNAME/.local/bin && chown ${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin && chmod 755 /home/$USERNAME/.local/bin
+
 # Python 3 for VMware PowerCLI
 # apt package(s): gcc, wget, python3, python3-dev, python3-distutils
-ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /home/$USERNAME/.local/bin
-RUN ls -lah /home/$USERNAME/.local/bin/get-pip.py
+ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/get-pip.py /home/$USERNAME/.local/bin
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
-    && python3.7 -m pip install --no-cache-dir  six psutil lxml pyopenssl \
-    && rm /home/$USERNAME/.local/bin/get-pip.py
-RUN mkdir -p /home/$USERNAME/.local/share/powershell/Modules
-RUN cp -rfp /usr/local/share/powershell/Modules/* /home/$USERNAME/.local/share/powershell/Modules/
-ENV PSModulePath="/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:$PSModulePath"
-RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
-RUN pwsh -Command "Write-Output $env:PSModulePath"
-RUN ls -lah /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/13.3.0.24145081/VMware.PowerCLI/
-RUN pwsh -Command "Import-Module -Name /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/13.3.0.24145081/VMware.PowerCLI/VMware.PowerCLI.psd1"
+    && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
+    && rm /tmp/get-pip.py
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
-RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false" \
-    && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
+RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
+    && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
 
 # Switching back to interactive after container build
 ENV DEBIAN_FRONTEND=dialog
