@@ -240,9 +240,9 @@ RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && rm /home/$USERNAME/.local/bin/get-pip.py
 
 # Configure PowerCLI
-RUN pwsh -Command " \
-    Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false; \
-    Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
+#RUN pwsh -Command " \
+#    Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false; \
+#    Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 
 # Switching back to interactive after container build
