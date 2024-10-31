@@ -106,7 +106,8 @@ FROM msft-install as vmware-install-arm64
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
 RUN apt-get update && apt-get install -y p7zip-full \
-    && 7z x /tmp/vmware-powercli.zip -o/home/coder/.local/share/powershell/Modules/ \
+    && ls -lah /home/coder/.local/share/powershell/Modules \
+    && 7z x /tmp/vmware-powercli.zip -o/home/coder/.local/share/powershell/Modules \
     && rm /tmp/vmware-powercli.zip
 
 FROM msft-install as vmware-install-amd64
@@ -125,9 +126,10 @@ USER $USERNAME
 # apt package(s): gcc, wget, python3, python3-dev, python3-distutils
 ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /tmp/
 RUN ls -lah /tmp/get-pip.py
-RUN mkdir -p /home/coder/.local/lib && chown -R coder:coder /home/$USERNAME
+RUN chown -R chown=${USER_UID}:${USER_GID} /home/coder
+RUN mkdir -p /home/coder/.local/lib
 USER coder
-ENV PATH=${PATH}:/home/coder/.local/bin
+ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /tmp/get-pip.py \
     && python3.7 -m pip install --no-cache-dir --user six psutil lxml pyopenssl \
     && rm /tmp/get-pip.py
