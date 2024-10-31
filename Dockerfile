@@ -108,6 +108,25 @@ ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830
 ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
 RUN 7z x /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules && rm /tmp/vmware-powercli.zip
 
+####POWERCLI-arm####
+# Switch to root user to change permissions
+USER root
+# Change permissions to allow non-root access
+RUN chmod -R 755 /usr/local/share/powershell/Modules
+# Optionally, switch back to the non-root user if needed
+USER $USERNAME
+RUN ls -lah /usr/local/share/powershell/Modules
+RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
+# Verify that PSModulePath is set correctly in PowerShell
+# Set the PSModulePath environment variable
+ENV PSModulePath="/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules"
+# Verify that PSModulePath is set correctly in PowerShell
+RUN pwsh -Command "Write-Host 'PSModulePath is set to:' $env:PSModulePath"
+RUN pwsh -Command "Write-Output $env:PSModulePath"
+###RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
+RUN pwsh -Command "Import-Module VMWare.PowerCLI"
+####POWERCLI-arm####
+
 FROM msft-install as vmware-install-amd64
 
 # Install and setup VMware.PowerCLI PowerShell Module
@@ -116,7 +135,6 @@ RUN pwsh -Command Install-Module -Name VMware.PowerCLI -Scope AllUsers -Reposito
 FROM vmware-install-${TARGETARCH} as vmware-install-common
 
 ARG VMWARECEIP=false
-
 # Switch to non-root user for remainder of build
 USER $USERNAME
 RUN mkdir -p /home/$USERNAME/.local/bin && chown ${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin && chmod 755 /home/$USERNAME/.local/bin
@@ -127,29 +145,6 @@ ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
     && rm /home/$USERNAME/.local/bin/get-pip.py
-
-# Set the PSModulePath environment variable globally
-
-# Switch to root user to change permissions
-USER root
-
-# Change permissions to allow non-root access
-RUN chmod -R 755 /usr/local/share/powershell/Modules
-
-# Optionally, switch back to the non-root user if needed
-USER $USERNAME
-
-RUN ls -lah /usr/local/share/powershell/Modules
-RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
-# Verify that PSModulePath is set correctly in PowerShell
-# Set the PSModulePath environment variable
-ENV PSModulePath="/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules"
-# Verify that PSModulePath is set correctly in PowerShell
-RUN pwsh -Command "Write-Host 'PSModulePath is set to:' $env:PSModulePath"
-
-RUN pwsh -Command "Write-Output $env:PSModulePath"
-###RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
-RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
 
