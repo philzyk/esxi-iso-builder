@@ -124,7 +124,7 @@ FROM msft-install as vmware-install-arm64
 #RUN ls -lah /usr/local/share/powershell/Modules
 #RUN ls -lah /usr/local/share/powershell/Modules/
 ##RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
-RUN pwsh -Command Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force -Verbose
+RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force -Verbose"
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 
 ####POWERCLI-arm####
@@ -149,7 +149,7 @@ RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 FROM msft-install as vmware-install-amd64
 
 # Install and setup VMware.PowerCLI PowerShell Module
-RUN pwsh -Command Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose
+RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose"
 
 FROM vmware-install-${TARGETARCH} as vmware-install-common
 
