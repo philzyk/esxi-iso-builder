@@ -25,6 +25,8 @@ RUN apt-get update \
         sudo \
         whois \
         unzip \
+        7zip-full \
+        file \
         less \
         libc6 \
         libgcc1 \
@@ -103,24 +105,26 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 
 FROM msft-install as vmware-install-arm64
 
-ARG ARCH_URL=https://7-zip.org/a/7z2408-linux-arm64.tar.xz
-ADD ${ARCH_URL} /tmp/7z2408-linux-arm64.tar.xz
-RUN mkdir -p /tmp/7zip && \
-    tar -xf /tmp/7z2408-linux-arm64.tar.xz -C /tmp/7zip && \
-    rm -rf /tmp/7z2408-linux-arm64.tar.xz && \
-    mv /tmp/7zip/7zz /usr/local/bin/7zz && \
-    rm -rf /tmp/7zip/ && \
-    chmod +x /usr/local/bin/7zz
+#ARG ARCH_URL=https://7-zip.org/a/7z2408-linux-arm64.tar.xz
+#ADD ${ARCH_URL} /tmp/7z2408-linux-arm64.tar.xz
+#RUN mkdir -p /tmp/7zip && \
+#    tar -xf /tmp/7z2408-linux-arm64.tar.xz -C /tmp/7zip && \
+#    rm -rf /tmp/7z2408-linux-arm64.tar.xz && \
+#    mv /tmp/7zip/7zz /usr/local/bin/7zz && \
+#    rm -rf /tmp/7zip/ && \
+#    chmod +x /usr/local/bin/7zz
 
-ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
-RUN mkdir -p /usr/local/share/powershell/Modules
-ADD ${POWERCLIURL} /usr/local/share/powershell/Modules/vmware-powercli.zip
-RUN ls -lah /usr/local/share/powershell/Modules/vmware-powercli.zip
-RUN unzip /usr/local/share/powershell/Modules/vmware-powercli.zip -d /usr/local/share/powershell/Modules
+#ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
+#RUN mkdir -p /usr/local/share/powershell/Modules
+#RUN chmod -R 755 /usr/local/share/powershell/Modules
+#ADD ${POWERCLIURL} /usr/local/share/powershell/Modules/vmware-powercli.zip
+#RUN ls -lah /usr/local/share/powershell/Modules/vmware-powercli.zip
+#RUN unzip /usr/local/share/powershell/Modules/vmware-powercli.zip -d /usr/local/share/powershell/Modules
 ##RUN rm /usr/local/share/powershell/Modules/vmware-powercli.zip
-RUN ls -lah /usr/local/share/powershell/Modules
-RUN ls -lah /usr/local/share/powershell/Modules/
+#RUN ls -lah /usr/local/share/powershell/Modules
+#RUN ls -lah /usr/local/share/powershell/Modules/
 ##RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
+RUN pwsh -Command Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force -Verbose
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 
 ####POWERCLI-arm####
@@ -139,7 +143,7 @@ RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 #RUN pwsh -Command "Write-Host 'PSModulePath is set to:' $env:PSModulePath"
 #RUN pwsh -Command "Write-Output $env:PSModulePath"
 ###RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
-RUN pwsh -Command "Import-Module VMWare.PowerCLI"
+#RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 ####POWERCLI-arm####
 
 FROM msft-install as vmware-install-amd64
