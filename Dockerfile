@@ -133,10 +133,11 @@ ARG POWERCLI_URL="https://vdc-download.vmware.com/vmwb-repository/dcr-public/028
 ARG MODULE_PATH="/usr/local/share/powershell/Modules"
 
 # Download and install PowerCLI
-RUN wget -O /tmp/PowerCLI.zip "$POWERCLI_URL" && \
-    mkdir -p "$MODULE_PATH" && \
-    unzip /tmp/PowerCLI.zip -d "$MODULE_PATH" && \
-    rm /tmp/PowerCLI.zip
+RUN wget -O /tmp/PowerCLI.zip "$POWERCLI_URL"
+RUN mkdir -p "$MODULE_PATH"
+#RUN unzip /tmp/PowerCLI.zip -d "$MODULE_PATH"
+RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
+RUN rm /tmp/PowerCLI.zip
 
 # Verify PowerCLI installation
 RUN pwsh -Command "Import-Module VMware.PowerCLI; Write-Output 'PowerCLI Installed Successfully'"
