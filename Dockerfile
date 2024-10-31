@@ -105,10 +105,10 @@ FROM msft-install as vmware-install-arm64
 
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
-RUN apt-get update && apt-get install -y p7zip-full \
-    && ls -lah /home/coder/.local/share/powershell/Modules \
-    && 7z x /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules \
-    && rm /tmp/vmware-powercli.zip
+ADD mkdir -p /usr/local/share/powershell/Modules
+RUN ls -lah /home/coder/.local/share/powershell/Modules
+RUN 7z x /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules
+RUN rm /tmp/vmware-powercli.zip
 
 FROM msft-install as vmware-install-amd64
 
@@ -132,6 +132,8 @@ RUN python3.7 /tmp/get-pip.py \
     && python3.7 -m pip install --no-cache-dir  six psutil lxml pyopenssl \
     && rm /tmp/get-pip.py
 USER $USERNAME
+RUN mkdir -p /home/$USERNAME/.local/share/powershell/Modules
+RUN cp -R /usr/local/share/powershell/Modules /home/$USERNAME/.local/share/powershell/Modules
 RUN pwsh -Command Import-Module VMWare.PowerCLI    
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
