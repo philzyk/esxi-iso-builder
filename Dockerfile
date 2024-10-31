@@ -131,9 +131,9 @@ RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && python3.7 -m pip install --no-cache-dir  six psutil lxml pyopenssl \
     && rm /home/$USERNAME/.local/bin/get-pip.py
 RUN mkdir -p /home/$USERNAME/.local/share/powershell/Modules
-RUN cp -rfp /usr/local/share/powershell/Modules /home/$USERNAME/.local/share/powershell/Modules
+RUN cp -rfp /usr/local/share/powershell/Modules/* /home/$USERNAME/.local/share/powershell/Modules/
 RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
-RUN pwsh -Command "echo $env:PSModulePath"
+RUN pwsh -Command "Write-Output $env:PSModulePath"
 RUN ls -lah /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/
 RUN pwsh -Command "Import-Module -Name /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1"
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
