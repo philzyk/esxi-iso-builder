@@ -127,7 +127,7 @@ RUN mkdir -p /home/$USERNAME/.local/bin && chown ${USER_UID}:${USER_GID} /home/$
 ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /home/$USERNAME/.local/bin
 RUN ls -lah /home/$USERNAME/.local/bin/get-pip.py
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
-RUN python3.7 /tmp/get-pip.py \
+RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && python3.7 -m pip install --no-cache-dir  six psutil lxml pyopenssl \
     && rm /home/$USERNAME/.local/bin/get-pip.py
 RUN mkdir -p /home/$USERNAME/.local/share/powershell/Modules
