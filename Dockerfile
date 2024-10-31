@@ -116,9 +116,8 @@ ADD ${POWERCLIURL} /usr/local/share/powershell/Modules/vmware-powercli.zip
 RUN 7z x /usr/local/share/powershell/Modules/vmware-powercli.zip -o/usr/local/share/powershell/Modules/ && rm /usr/local/share/powershell/Modules/vmware-powercli.zip
 RUN ls -lah /usr/local/share/powershell/Modules
 RUN ls -lah /usr/local/share/powershell/Modules/
+RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
-/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1
-
 
 ####POWERCLI-arm####
 # Switch to root user to change permissions
