@@ -115,10 +115,12 @@ RUN mkdir -p /tmp/7zip && \
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 RUN mkdir -p /usr/local/share/powershell/Modules
 ADD ${POWERCLIURL} /usr/local/share/powershell/Modules/vmware-powercli.zip
-RUN unzip /usr/local/share/powershell/Modules/vmware-powercli.zip -d /usr/local/share/powershell/Modules/ && rm /usr/local/share/powershell/Modules/vmware-powercli.zip
+RUN ls -lah /usr/local/share/powershell/Modules/vmware-powercli.zip
+RUN unzip /usr/local/share/powershell/Modules/vmware-powercli.zip -d /usr/local/share/powershell/Modules/ 
+##RUN rm /usr/local/share/powershell/Modules/vmware-powercli.zip
 RUN ls -lah /usr/local/share/powershell/Modules
 RUN ls -lah /usr/local/share/powershell/Modules/
-RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
+##RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 
 ####POWERCLI-arm####
