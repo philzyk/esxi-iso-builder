@@ -135,10 +135,10 @@ RUN cp -rfp /usr/local/share/powershell/Modules /home/$USERNAME/.local/share/pow
 RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
 RUN pwsh -Command "echo $env:PSModulePath"
 RUN ls -lah /home/$USERNAME/.local/share/powershell/Modules
-RUN pwsh -Command Import-Module -Name /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1
-RUN pwsh -Command Import-Module VMWare.PowerCLI
-RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
-    && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
+RUN pwsh -Command "Import-Module -Name /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1"
+RUN pwsh -Command "Import-Module VMWare.PowerCLI"
+RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false" \
+    && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 # Switching back to interactive after container build
 ENV DEBIAN_FRONTEND=dialog
