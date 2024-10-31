@@ -129,12 +129,22 @@ RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && rm /home/$USERNAME/.local/bin/get-pip.py
 
 # Set the PSModulePath environment variable globally
+
+# Switch to root user to change permissions
+USER root
+
+# Change permissions to allow non-root access
+RUN chmod -R o+r /usr/local/share/powershell/Modules
+
+# Optionally, switch back to the non-root user if needed
+USER $USERNAME
+
 RUN ls -lah /usr/local/share/powershell/Modules
 ENV PSModulePath="/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules:$PSModulePath"
 RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules:' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
 # Verify that PSModulePath is set correctly in PowerShell
 RUN pwsh -Command "Write-Output $env:PSModulePath"
-
+RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
 RUN pwsh -Command "Import-Module VMWare.PowerCLI"
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
