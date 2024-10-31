@@ -107,7 +107,7 @@ ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830
 ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
 RUN apt-get update && apt-get install -y p7zip-full \
     && ls -lah /home/coder/.local/share/powershell/Modules \
-    && 7z x /tmp/vmware-powercli.zip -o/home/coder/.local/share/powershell/Modules \
+    && 7z x /tmp/vmware-powercli.zip -o/usr/local/share/powershell/Modules \
     && rm /tmp/vmware-powercli.zip
 
 FROM msft-install as vmware-install-amd64
@@ -126,13 +126,12 @@ USER $USERNAME
 # apt package(s): gcc, wget, python3, python3-dev, python3-distutils
 ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /tmp/
 RUN ls -lah /tmp/get-pip.py
-RUN chown -R chown=${USER_UID}:${USER_GID} /home/coder
-RUN mkdir -p /home/coder/.local/lib
-USER coder
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
+USER root
 RUN python3.7 /tmp/get-pip.py \
-    && python3.7 -m pip install --no-cache-dir --user six psutil lxml pyopenssl \
+    && python3.7 -m pip install --no-cache-dir  six psutil lxml pyopenssl \
     && rm /tmp/get-pip.py
+USER $USERNAME
 RUN pwsh -Command Import-Module VMWare.PowerCLI    
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
