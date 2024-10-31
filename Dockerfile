@@ -57,9 +57,9 @@ RUN groupadd --gid $USER_GID $USERNAME \
 WORKDIR /home/$USERNAME
 
 # Clean up
-RUN apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+#RUN apt-get autoremove -y \
+#    && apt-get clean -y \
+#    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 FROM base AS linux-arm64
 ARG DOTNET_ARCH=arm64
@@ -105,15 +105,17 @@ FROM msft-install as vmware-install-arm64
 
 ARG ARCH_URL=https://7-zip.org/a/7z2408-linux-arm64.tar.xz
 ADD ${ARCH_URL} /tmp/7z2408-linux-arm64.tar.xz
-RUN tar -xf /tmp/7z2408-linux-arm64.tar.xz -C /tmp && \
-    rm /tmp/7z2408-linux-arm64.tar.xz && \
-    chmod +x /tmp/7z && \
-    mv /tmp/7z /usr/local/bin/
+RUN mkdir -p /tmp/7zip && \
+    tar -xf 7z2408-linux-arm64.tar.xz -C /tmp/7zip && \
+    rm -rf /tmp/7z2408-linux-arm64.tar.xz && \
+    mv /tmp/7zip/7zz /usr/local/bin/7zz && \
+    rm -rf /tmp/7zip/
+    chmod +x /usr/local/bin/7zz
 
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 RUN mkdir -p /usr/local/share/powershell/Modules
 ADD ${POWERCLIURL} /usr/local/share/powershell/Modules/vmware-powercli.zip
-RUN 7z x /usr/local/share/powershell/Modules/vmware-powercli.zip -o/usr/local/share/powershell/Modules/ && rm /usr/local/share/powershell/Modules/vmware-powercli.zip
+RUN 7zz x /usr/local/share/powershell/Modules/vmware-powercli.zip -o/usr/local/share/powershell/Modules/ && rm /usr/local/share/powershell/Modules/vmware-powercli.zip
 RUN ls -lah /usr/local/share/powershell/Modules
 RUN ls -lah /usr/local/share/powershell/Modules/
 RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
