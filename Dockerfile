@@ -139,10 +139,13 @@ RUN mkdir -p "$MODULE_PATH"
 RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN rm /tmp/PowerCLI.zip
 RUN find /usr/local/share/powershell/Modules -type f | while read -r file; do \
-        sanitized_file="$(echo "$file" | tr -d '\n')"; \
-        target="$(echo "$sanitized_file" | sed 's/\\/\//g')"; \
-        mkdir -p "$(dirname "$target")"; \
-        mv -v "$sanitized_file" "$target"; \
+        # Sanitize filename by removing newline characters and replacing backslashes with slashes
+        sanitized_file="$(echo "$file" | tr -d '\n' | tr '\\' '/')"; \
+        # Create target directory
+        target_dir="$(dirname "$sanitized_file")"; \
+        mkdir -p "$target_dir"; \
+        # Move the file to the new path
+        mv -v "$file" "$sanitized_file" || echo "Could not move: $file to $sanitized_file"; \
     done
 RUN ls -lah "$MODULE_PATH"
 # Verify PowerCLI installation
