@@ -148,53 +148,48 @@ RUN rm /tmp/PowerCLI.zip
 #        # Move the file to the new path
 #        mv -v "$file" "$sanitized_file" || echo "Could not move: $file to $sanitized_file"; \
 #    done
-RUN find /usr/local/share/powershell/Modules -type f | while read -r file; do \
-        sanitized_file="$(echo "$file" | tr -d '\n' | tr '\\' '/')"; \
-        target_dir="$(dirname "$sanitized_file")"; \
-        mkdir -p "$target_dir"; \
-        if [ "$file" != "$sanitized_file" ]; then \
-            mv -v "$file" "$sanitized_file" || echo "Failed to move: $file to $sanitized_file"; \
-        fi; \
-    done
 
-FROM mcr.microsoft.com/powershell:latest
+#RUN find /usr/local/share/powershell/Modules -type f | while read -r file; do \
+#        sanitized_file="$(echo "$file" | tr -d '\n' | tr '\\' '/')"; \
+#        target_dir="$(dirname "$sanitized_file")"; \
+#        mkdir -p "$target_dir"; \
+#        if [ "$file" != "$sanitized_file" ]; then \
+#            mv -v "$file" "$sanitized_file" || echo "Failed to move: $file to $sanitized_file"; \
+#        fi; \
+#    done
+# Track directories that have already been created
+
+# Walk through the directory structure
+RUN declare -A made_dirs && find /usr/local/share/powershell/Modules -type f | while IFS= read -r filepath; do \
+    # Check if filename contains a backslash
+    if [[ "$filepath" == *\\* ]]; then \
+        # Replace backslashes with forward slashes in the filename
+        alt_filepath="${filepath//\\//}" \
+        
+        # Remove the leading slash if present
+        alt_filepath="${alt_filepath#/}" \
+
+        # Separate the directory path from the filename
+        alt_dirname="$(dirname "$alt_filepath")" \
+        full_dirname="$(dirname "$filepath")/$alt_dirname" \
+
+        # Create the directory if it hasn't been created already
+        if [[ -z "${made_dirs[$full_dirname]}" ]]; then \
+            mkdir -p "$full_dirname" \
+            made_dirs["$full_dirname"]=1 \
+        fi \
+
+        # Rename the file with the corrected path
+        mv "$filepath" "${full_dirname}/$(basename "$alt_filepath")" \
+    fi \
+done
+
+#FROM mcr.microsoft.com/powershell:latest
 # Install VMware PowerCLI
 RUN pwsh -Command " \
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; Get-Module -ListAvailable VMware.PowerCLI; Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -AllowClobber; \
     Import-Module VMware.PowerCLI -Verbose"
     
-# RUN ls -lah "$MODULE_PATH"
-# Verify PowerCLI installation
-# RUN pwsh -Command "Import-Module VMware.PowerCLI"
-# RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
-# Set PowerCLI CEIP to not participate
-RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false"
-
-# Set PowerCLI as the default module for PowerShell
-# ENV PSModulePath="$MODULE_PATH:$PSModulePath"
-
-# Test PowerCLI module availability
-# RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI"
-
-####POWERCLI-arm####
-# Switch to root user to change permissions
-#USER root
-# Change permissions to allow non-root access
-#RUN chmod -R 755 /usr/local/share/powershell/Modules
-# Optionally, switch back to the non-root user if needed
-#USER $USERNAME
-#RUN ls -lah /usr/local/share/powershell/Modules
-#RUN pwsh -Command "[Environment]::SetEnvironmentVariable('PSModulePath', '/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules' + [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Process'), 'Process')"
-# Verify that PSModulePath is set correctly in PowerShell
-# Set the PSModulePath environment variable
-# ENV PSModulePath="/home/$USERNAME/.local/share/powershell/Modules:/usr/local/share/powershell/Modules:/opt/microsoft/powershell/Modules"
-# Verify that PSModulePath is set correctly in PowerShell
-#RUN pwsh -Command "Write-Host 'PSModulePath is set to:' $env:PSModulePath"
-#RUN pwsh -Command "Write-Output $env:PSModulePath"
-###RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
-#RUN pwsh -Command "Import-Module VMWare.PowerCLI"
-####POWERCLI-arm####
-
 FROM msft-install as vmware-install-amd64
 
 # Install and setup VMware.PowerCLI PowerShell Module
@@ -202,47 +197,20 @@ RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Reposit
 
 FROM vmware-install-${TARGETARCH} as vmware-install-common
 
-#ARG VMWARECEIP=false
-# Switch to non-root user for remainder of build
-#USER $USERNAME
-#RUN mkdir -p /home/$USERNAME/.local/bin && chown ${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin && chmod 755 /home/$USERNAME/.local/bin
-# Python 3 for VMware PowerCLI
-# apt package(s): gcc, wget, python3, python3-dev, python3-distutils
-#ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /home/$USERNAME/.local/bin
-#ENV PATH=${PATH}:/home/$USERNAME/.local/bin
-#RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
-#    && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
-#    && rm /home/$USERNAME/.local/bin/get-pip.py
-#RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
-#    && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
-
-
 ARG VMWARECEIP=false
-
 # Switch to non-root user for remainder of build
 USER $USERNAME
-
-# Create local bin directory for user
-RUN mkdir -p /home/$USERNAME/.local/bin \
-    && chown ${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin \
-    && chmod 755 /home/$USERNAME/.local/bin
-
+RUN mkdir -p /home/$USERNAME/.local/bin && chown ${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin && chmod 755 /home/$USERNAME/.local/bin
 # Python 3 for VMware PowerCLI
 # apt package(s): gcc, wget, python3, python3-dev, python3-distutils
 ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /home/$USERNAME/.local/bin
-
-# Update PATH
 ENV PATH=${PATH}:/home/$USERNAME/.local/bin
-
-# Install pip and necessary Python packages
 RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
     && rm /home/$USERNAME/.local/bin/get-pip.py
+RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
+    && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
 
-# Configure PowerCLI
-#RUN pwsh -Command " \
-#    Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false; \
-#    Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 
 # Switching back to interactive after container build
