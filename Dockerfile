@@ -28,6 +28,7 @@ RUN apt-get update \
         p7zip-full \
         file \
         wget \
+        gawk \
         less \
         libc6 \
         libgcc1 \
