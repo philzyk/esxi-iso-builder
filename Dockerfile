@@ -106,7 +106,7 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
     && echo /usr/bin/pwsh >> /etc/shells
 
 # Check installed versions of .NET and PowerShell
-RUN pwsh -Command "$PSVersionTable.PSVersion" \
+RUN pwsh -Command "Write-Output \$PSVersionTable" \
     && pwsh -Command "dotnet --list-runtimes" \
     && pwsh -Command "dotnet --version"
 ###################################################################################################
