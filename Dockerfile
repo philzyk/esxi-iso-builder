@@ -35,13 +35,7 @@ RUN apt-get update && \
         libicu66 \
         libssl1.1 \
         libstdc++6 \
-        zlib1g && \
-    apt-get clean
-sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.20_amd64.deb
-&& sudo dpkg -i libssl-dev_1.1.1f-1ubuntu2.20_amd64.deb
-sudo dpkg -i openssl_1.1.1f-1ubuntu2.20_amd64.deb
-
-RUN   rm -rf /var/lib/apt/lists/*
+        zlib1g
 
 # Configure en_US.UTF-8 Locale
 ENV LANGUAGE=en_US.UTF-8 \
