@@ -107,8 +107,8 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 
 # Check installed versions of .NET and PowerShell
 RUN pwsh -Command "Write-Output \$PSVersionTable" \
-    && pwsh -Command "dotnet --list-runtimes" \
-    && pwsh -Command "dotnet --version"
+    && pwsh -Command "dotnet --list-runtimes"
+
 ###################################################################################################
 FROM msft-install as vmware-install-arm64
 
