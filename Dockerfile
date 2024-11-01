@@ -16,6 +16,7 @@ RUN apt-get update && \
         apt-transport-https \
         ca-certificates \
         curl \
+        wget \
         gcc \
         locales \
         mkisofs \
