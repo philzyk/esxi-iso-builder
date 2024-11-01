@@ -133,19 +133,19 @@ RUN pwsh -Command "Write-Output \$PSVersionTable" \
 FROM msft-install as vmware-install-arm64
 
 #  PowerShell Core for ARM
-ARG POWERCLI_URL="https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip"
-ARG MODULE_PATH="/usr/local/share/powershell/Modules"
+#ARG POWERCLI_URL="https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip"
+#ARG MODULE_PATH="/usr/local/share/powershell/Modules"
 # Download and install PowerCLI
-RUN curl -L -o /tmp/PowerCLI.zip "$POWERCLI_URL"
-RUN mkdir -p "$MODULE_PATH"
-RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
-RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
-RUN chmod -R 755 "$MODULE_PATH"
-RUN ls -lah "$MODULE_PATH"/VMware.PowerCLI/
-RUN rm /tmp/PowerCLI.zip
+#RUN curl -L -o /tmp/PowerCLI.zip "$POWERCLI_URL"
+#RUN mkdir -p "$MODULE_PATH"
+#RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
+#RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
+#RUN chmod -R 755 "$MODULE_PATH"
+#RUN ls -lah "$MODULE_PATH"/VMware.PowerCLI/
+#RUN rm /tmp/PowerCLI.zip
 
-RUN pwsh -c "Save-Module -Name VMware.PowerCLI -Path ~/"
-RUN pwsh -c "Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force"
+RUN pwsh -c "Save-Module -Name VMware.PowerCLI  -RequiredVersion 13.0.0.20829139 -Path ~/"
+RUN pwsh -c "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Force"
 RUN pwsh -c "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP 0 -Confirm:0"
 RUN pwsh -c "Set-PowerCLIConfiguration -Scope User -InvalidCertificateAction Ignore -Confirm:0"
 RUN pwsh -c "Get-Module -ListAvailable VMware.PowerCLI"
@@ -176,13 +176,13 @@ RUN mkdir -p /home/coder/files/{cfg_files,iso_temp} \
     && mkdir -p /home/coder/files/esxi6_7/{repo_zip_esxi6_7,ready_iso_esxi6_7,drivers_esxi6_7} \
     && mkdir -p /home/coder/files/esxi7/{repo_zip_esxi7,ready_iso_esxi7,drivers_esxi7} \
     && mkdir -p /home/coder/files/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8}
-RUN find /usr/local -iname VMware.PowerCLI.psd1
+#RUN find /usr/local -iname VMware.PowerCLI.psd1
 # Split PSModulePath to check directories (single line output for clarity in Docker)
 
 # Import VMware.PowerCLI with error handling in a single line
 #RUN pwsh -Command "$env:PSModulePath -split ';' | ForEach-Object { Write-Host $_ }"
 #RUN pwsh -Command "try { Import-Module VMware.PowerCLI -Verbose } catch { Write-Host 'Failed to import module:' $_.Exception.Message }"
-RUN pwsh -Command "Import-Module -Name /usr/local/share/powershell/Modules/VMware.PowerCLI/13.0.0.20829139/VMware.PowerCLI.psd1"
+#RUN pwsh -Command "Import-Module -Name /usr/local/share/powershell/Modules/VMware.PowerCLI/13.0.0.20829139/VMware.PowerCLI.psd1"
 #RUN pwsh -Command "$env:DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER='0'"
 #RUN pwsh -Command "$env:PSModulePath -split ';'"
 #RUN ls -lah /usr/local/share/powershell/Modules/
