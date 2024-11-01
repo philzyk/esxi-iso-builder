@@ -60,7 +60,7 @@ RUN groupadd --gid $USER_GID $USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
 
 WORKDIR /home/$USERNAME
-
+###################################################################################################
 # Architecture specific stages
 
 FROM base AS linux-amd64
@@ -91,9 +91,12 @@ RUN mkdir -p ${DOTNET_ROOT} \
 
 # PowerShell Core 7.2 (LTS)
 RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | cut -d 'v' -f 2 | cut -d '.' -f 1) \
+    && echo "PowerShell Major Version: ${PS_MAJOR_VERSION}" \
     && PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} \
     && PS_PACKAGE=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4 | xargs basename) \
-    && PS_PACKAGE_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag= lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4) \
+    && echo "PowerShell Package: ${PS_PACKAGE}" \
+    && PS_PACKAGE_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4) \
+    && echo "PowerShell Package URL: ${PS_PACKAGE_URL}" \
     && curl -LO ${PS_PACKAGE_URL} \
     && mkdir -p ${PS_INSTALL_FOLDER} \
     && tar zxf ${PS_PACKAGE} -C ${PS_INSTALL_FOLDER} \
@@ -106,7 +109,7 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 RUN pwsh -Command "$PSVersionTable.PSVersion" \
     && pwsh -Command "dotnet --list-runtimes" \
     && pwsh -Command "dotnet --version"
-
+###################################################################################################
 FROM msft-install as vmware-install-arm64
 
 #ARG ARCH_URL="https://7-zip.org/a/7z2408-linux-arm64.tar.xz"
