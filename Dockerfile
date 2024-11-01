@@ -131,9 +131,9 @@ RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${
 
 # Making working directories for esxi-iso-biulder
 RUN mkdir -p /home/$USERNAME/files/{cfg_files,iso_temp} \
-    && mkdir -p /home/coder/files/esxi6_7/{repo_zip_esxi6_7,ready_iso_esxi6_7,drivers_esxi6_7} \
-    && mkdir -p /home/coder/files/esxi7/{repo_zip_esxi7,ready_iso_esxi7,drivers_esxi7} \
-    && mkdir -p /home/coder/files/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8}
+    && mkdir -p /$USERNAME/coder/files/esxi6_7/{repo_zip_esxi6_7,ready_iso_esxi6_7,drivers_esxi6_7} \
+    && mkdir -p /$USERNAME/coder/files/esxi7/{repo_zip_esxi7,ready_iso_esxi7,drivers_esxi7} \
+    && mkdir -p /$USERNAME/coder/files/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8}
 
 # Clean up Finalizing
 USER root
