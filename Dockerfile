@@ -181,7 +181,7 @@ RUN pwsh -Command "try { Import-Module VMware.PowerCLI -Verbose } catch { Write-
 #RUN ls -lah /usr/local/share/powershell/Modules/
 #RUN pwsh -Command "Get-Host"
 #RUN pwsh -Command "Import-Module VMware.PowerCLI -Verbose"
-#RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false" \
+RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false" \
     && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 # Clean up
