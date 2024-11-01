@@ -114,26 +114,23 @@ RUN pwsh -Command "Write-Output \$PSVersionTable" \
 FROM msft-install as vmware-install-arm64
 
 #  PowerShell Core for ARM
-#FROM mcr.microsoft.com/powershell:7.2.0-ubuntu-20.04-arm64
-
-RUN pwsh -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12"
-
-RUN pwsh -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted"
-
-# VMware PowerCLI RequiredVersion 13.0.0.20829139
-RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Force -AllowClobber"
-
-# Turn off CEIP
-RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false"
-
-# Check PowerCLI
-RUN pwsh -Command "Get-Module -Name VMware.PowerCLI -ListAvailable | Where-Object { $_.Version -eq '13.0.0.20829139' }"
-
+ARG POWERCLI_URL="https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip"
+ARG MODULE_PATH="/usr/local/share/powershell/Modules"
+# Download and install PowerCLI
+RUN curl -L -o /tmp/PowerCLI.zip "$POWERCLI_URL"
+RUN mkdir -p "$MODULE_PATH"
+RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
+RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
+#RUN chmod -R 755 "$MODULE_PATH"
+RUN ls -lah "$MODULE_PATH"/VMware.PowerCLI/
+RUN rm /tmp/PowerCLI.zip
 
 FROM msft-install as vmware-install-amd64
 
 # Install and setup VMware.PowerCLI PowerShell Module
-RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose"
+# RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Repository PSGallery -Force -Verbose"
+RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force -Verbose"
+
 
 FROM vmware-install-${TARGETARCH} as vmware-install-common
 
@@ -148,6 +145,11 @@ ENV PATH=${PATH}:/home/$USERNAME/.local/bin
 RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
     && rm /home/$USERNAME/.local/bin/get-pip.py
+
+RUN mkdir -p /home/coder/files/{cfg_files,iso_temp} \
+    && mkdir -p /home/coder/files/esxi6_7/{repo_zip_esxi6_7,ready_iso_esxi6_7,drivers_esxi6_7} \
+    && mkdir -p /home/coder/files/esxi7/{repo_zip_esxi7,ready_iso_esxi7,drivers_esxi7} \
+    && mkdir -p /home/coder/files/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8}
 
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
