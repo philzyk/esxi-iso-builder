@@ -169,9 +169,9 @@ RUN mkdir -p /home/coder/files/{cfg_files,iso_temp} \
     && mkdir -p /home/coder/files/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8}
 RUN find /usr/local -iname VMware.PowerCLI.psd1
 # Split PSModulePath to check directories (single line output for clarity in Docker)
-RUN pwsh -Command "$env:PSModulePath -split ';' | ForEach-Object { Write-Host $_ }"
 
 # Import VMware.PowerCLI with error handling in a single line
+#RUN pwsh -Command "$env:PSModulePath -split ';' | ForEach-Object { Write-Host $_ }"
 #RUN pwsh -Command "try { Import-Module VMware.PowerCLI -Verbose } catch { Write-Host 'Failed to import module:' $_.Exception.Message }"
 RUN pwsh -Command "Import-Module -Name /usr/local/share/powershell/Modules/VMware.PowerCLI/13.0.0.20829139/VMware.PowerCLI.psd1"
 #RUN pwsh -Command "$env:DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER='0'"
