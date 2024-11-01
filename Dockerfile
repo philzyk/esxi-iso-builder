@@ -168,6 +168,8 @@ RUN mkdir -p /home/coder/files/{cfg_files,iso_temp} \
     && mkdir -p /home/coder/files/esxi7/{repo_zip_esxi7,ready_iso_esxi7,drivers_esxi7} \
     && mkdir -p /home/coder/files/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8}
 RUN pwsh -Command "$env:DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0"
+RUN pwsh -Command "$env:PSModulePath -split ';'"
+RUN ls -lah /usr/local/share/powershell/Modules/
 RUN pwsh -Command "Get-Host"
 RUN pwsh -Command "Import-Module VMware.PowerCLI -Verbose"
 RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false" \
