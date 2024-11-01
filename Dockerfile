@@ -61,6 +61,11 @@ RUN groupadd --gid $USER_GID $USERNAME && \
 WORKDIR /home/$USERNAME
 
 # Architecture specific stages
+
+FROM base AS linux-amd64
+ARG DOTNET_ARCH=x64
+ARG PS_ARCH=x64
+
 FROM base AS linux-arm64
 ARG DOTNET_ARCH=arm64
 ARG PS_ARCH=arm64
@@ -68,10 +73,6 @@ ARG PS_ARCH=arm64
 FROM base AS linux-arm
 ARG DOTNET_ARCH=arm
 ARG PS_ARCH=arm32
-
-FROM base AS linux-amd64
-ARG DOTNET_ARCH=x64
-ARG PS_ARCH=x64
 
 # Install .NET Core Runtime and PowerShell in the target architecture stage
 FROM linux-${TARGETARCH} AS msft-install
@@ -148,7 +149,7 @@ RUN chmod -R 755 "$MODULE_PATH"
 RUN ls -lah "$MODULE_PATH"/VMware.PowerCLI/
 RUN rm /tmp/PowerCLI.zip
 RUN pwsh -Command "$PSVersionTable"
-RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
+#RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
 #RUN pwsh -Command "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser"
 #RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI" 
 #RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Force -AllowClobber"
