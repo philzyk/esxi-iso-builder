@@ -17,6 +17,7 @@ RUN apt-get update && \
         apt-transport-https \
         ca-certificates \
         curl \
+        git \
         gcc \
         locales \
         mkisofs \
@@ -106,7 +107,6 @@ FROM msft-install AS vmware-install-arm64
 RUN pwsh -c "Save-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Path ~/" \
     && pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Force -Verbose -SkipPublisherCheck" \
     && rm -rf ~/VMware.*
-RUN ls -lah ~/
 
 FROM msft-install AS vmware-install-amd64
 
@@ -130,11 +130,13 @@ ARG VMWARECEIP=false
 RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false" \
     && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
-# Making working directories for esxi-iso-biulder
-RUN mkdir -p /home/$USERNAME/files/{cfg_files,iso_temp} \
-    && mkdir -p /home/$USERNAME/files/esxi6_7/{repo_zip_esxi6_7,ready_iso_esxi6_7,drivers_esxi6_7} \
-    && mkdir -p /home/$USERNAME/files/esxi7/{repo_zip_esxi7,ready_iso_esxi7,drivers_esxi7} \
-    && mkdir -p /home/$USERNAME/files/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8}
+# Making working directories for diffrent esxi-iso-biulders
+RUN mkdir -p /home/$USERNAME/files/esxi-iso-biulder/{cfg_files,iso_temp} \
+    && mkdir -p /home/$USERNAME/files/esxi-iso-biulder/esxi6_7/{repo_zip_esxi6_7,ready_iso_esxi6_7,drivers_esxi6_7} \
+    && mkdir -p /home/$USERNAME/files/esxi-iso-biulder/esxi7/{repo_zip_esxi7,ready_iso_esxi7,drivers_esxi7} \
+    && mkdir -p /home/$USERNAME/files/esxi-iso-biulder/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8} \
+    && git clone https://github.com/itiligent/ESXi-Custom-ISO /home/$USERNAME/files/ESXi-Custom-ISO\
+    && git clone https://github.com/VFrontDe-Org/ESXi-Customizer-PS /home/$USERNAME/files/ESXi-Customizer-PS 
 
 # Clean up Finalizing
 USER root
