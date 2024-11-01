@@ -170,10 +170,12 @@ RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${V
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
 
 # Clean up
+USER root
 RUN apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+USER $USERNAME
 # Switching back to interactive after container build
 ENV DEBIAN_FRONTEND=dialog
 # Setting entrypoint to Powershell
