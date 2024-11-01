@@ -36,8 +36,12 @@ RUN apt-get update && \
         libssl1.1 \
         libstdc++6 \
         zlib1g && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get clean
+sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.20_amd64.deb
+&& sudo dpkg -i libssl-dev_1.1.1f-1ubuntu2.20_amd64.deb
+sudo dpkg -i openssl_1.1.1f-1ubuntu2.20_amd64.deb
+
+RUN   rm -rf /var/lib/apt/lists/*
 
 # Configure en_US.UTF-8 Locale
 ENV LANGUAGE=en_US.UTF-8 \
@@ -174,8 +178,8 @@ RUN find /usr/local -iname VMware.PowerCLI.psd1
 RUN pwsh -Command "$env:PSModulePath -split ';' | ForEach-Object { Write-Host $_ }"
 
 # Import VMware.PowerCLI with error handling in a single line
-RUN pwsh -Command "try { Import-Module VMware.PowerCLI -Verbose } catch { Write-Host 'Failed to import module:' $_.Exception.Message }"
-#RUN pwsh -Command "Import-Module -Name /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI/VMware.PowerCLI.psd1"
+#RUN pwsh -Command "try { Import-Module VMware.PowerCLI -Verbose } catch { Write-Host 'Failed to import module:' $_.Exception.Message }"
+RUN pwsh -Command "Import-Module -Name /usr/local/share/powershell/Modules/VMware.PowerCLI/13.0.0.20829139/VMware.PowerCLI.psd1"
 #RUN pwsh -Command "$env:DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER='0'"
 #RUN pwsh -Command "$env:PSModulePath -split ';'"
 #RUN ls -lah /usr/local/share/powershell/Modules/
