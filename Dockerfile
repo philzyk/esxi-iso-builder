@@ -71,31 +71,29 @@ FROM base AS linux-arm64
 ARG DOTNET_ARCH=arm64
 ARG PS_ARCH=arm64
 
-#FROM base AS linux-arm
-#ARG DOTNET_ARCH=arm
-#ARG PS_ARCH=arm32
+# Uncomment and fix the typo for linux-arm if needed
+# FROM base AS linux-arm
+# ARG DOTNET_ARCH=arm
+# ARG PS_ARCH=arm32
 
-# Install .NET Core Runtime and PowerShell in the target architecture stage
 FROM linux-${TARGETARCH} AS msft-install
 
-# Microsoft .NET Core для VMware PowerCLI
-ARG DOTNET_VERSION=6.0.20
-ARG POWERSHELL_VERSION=7.4.6
-
-# Установка .NET Core с официального скрипта
-RUN wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh \
-    && chmod +x dotnet-install.sh \
-    && ./dotnet-install.sh --channel ${DOTNET_VERSION%.*} --version ${DOTNET_VERSION} --install-dir /opt/microsoft/dotnet \
-    && rm dotnet-install.sh
-
-ENV DOTNET_ROOT=/opt/microsoft/dotnet
+# Microsoft .NET Core 3.1 Runtime for VMware PowerCLI
+ARG DOTNET_VERSION=3.1.32
+ARG DOTNET_PACKAGE=dotnet-runtime-${DOTNET_VERSION}-linux-${DOTNET_ARCH}.tar.gz
+ARG DOTNET_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Runtime/${DOTNET_VERSION}/${DOTNET_PACKAGE}
+ENV DOTNET_ROOT=/opt/microsoft/dotnet/${DOTNET_VERSION}
 ENV PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+ADD ${DOTNET_PACKAGE_URL} /tmp/${DOTNET_PACKAGE}
+RUN mkdir -p ${DOTNET_ROOT} \
+    && tar zxf /tmp/${DOTNET_PACKAGE} -C ${DOTNET_ROOT} \
+    && rm /tmp/${DOTNET_PACKAGE}
 
-# PowerShell Core (LTS)
-RUN PS_MAJOR_VERSION=${POWERSHELL_VERSION} \
+# PowerShell Core 7.2 (LTS)
+RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | cut -d 'v' -f 2 | cut -d '.' -f 1) \
     && PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} \
     && PS_PACKAGE=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4 | xargs basename) \
-    && PS_PACKAGE_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4) \
+    && PS_PACKAGE_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag= lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4) \
     && curl -LO ${PS_PACKAGE_URL} \
     && mkdir -p ${PS_INSTALL_FOLDER} \
     && tar zxf ${PS_PACKAGE} -C ${PS_INSTALL_FOLDER} \
