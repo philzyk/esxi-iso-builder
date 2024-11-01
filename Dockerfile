@@ -91,7 +91,7 @@ RUN mkdir -p ${DOTNET_ROOT} \
     && tar zxf /tmp/${DOTNET_PACKAGE} -C ${DOTNET_ROOT} \
     && rm /tmp/${DOTNET_PACKAGE}
 
-# PowerShell Core 7.4 (LTS)
+# PowerShell Core 7.2 (LTS)
 # apt package(s): ca-certificates, less, libssl1.1, libicu66, wget, unzip
 RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | cut -d 'v' -f 2 | cut -d '.' -f 1) \
     && PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} \
@@ -136,54 +136,16 @@ ARG MODULE_PATH="/usr/local/share/powershell/Modules"
 # Download and install PowerCLI
 RUN wget -O /tmp/PowerCLI.zip "$POWERCLI_URL"
 RUN mkdir -p "$MODULE_PATH"
-#RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
-RUN 7z rn /tmp/PowerCLI.zip $(7z l -slt /tmp/PowerCLI.zip | awk '/Path =/ {print $3, gensub(/\\/, "/", "g", $3)}' | paste -s -)
+# RUN 7z rn /tmp/PowerCLI.zip $(7z l -slt /tmp/PowerCLI.zip | awk '/Path =/ {print $3, gensub(/\\/, "/", "g", $3)}' | paste -s -)
 # RUN pwsh -Command "Expand-Archive -LiteralPath '/tmp/PowerCLI.zip' -DestinationPath "$MODULE_PATH" -PassThru"
-RUN 7zz x /tmp/PowerCLI.zip -o"$MODULE_PATH"
+RUN zipfile="/tmp/PowerCLI.zip" && temp_file=$(mktemp) && 7z l -slt "$zipfile" | awk '/^Path = / {old_path=substr($0, 7); new_path=old_path; gsub(/\\/, "/", new_path); if(old_path != new_path) print old_path " = " new_path}' > "$temp_file" && [ -s "$temp_file" ] && 7z rn "$zipfile" "@$temp_file"; rm -f "$temp_file"
+RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
+RUN ls -lah /usr/local/share/powershell/Modules/
 RUN rm /tmp/PowerCLI.zip
-#RUN find /usr/local/share/powershell/Modules -type f | while read -r file; do \
-#        # Sanitize filename by removing newline characters and replacing backslashes with slashes
-#        sanitized_file="$(echo "$file" | tr -d '\n' | tr '\\' '/')"; \
-#        # Create target directory
-#        target_dir="$(dirname "$sanitized_file")"; \
-#        mkdir -p "$target_dir"; \
-#        # Move the file to the new path
-#        mv -v "$file" "$sanitized_file" || echo "Could not move: $file to $sanitized_file"; \
-#    done
-
-#RUN find /usr/local/share/powershell/Modules -type f | while read -r file; do \
-#        sanitized_file="$(echo "$file" | tr -d '\n' | tr '\\' '/')"; \
-#        target_dir="$(dirname "$sanitized_file")"; \
-#        mkdir -p "$target_dir"; \
-#        if [ "$file" != "$sanitized_file" ]; then \
-#            mv -v "$file" "$sanitized_file" || echo "Failed to move: $file to $sanitized_file"; \
-#        fi; \
-#    done
-# Track directories that have already been created
-
-# Walk through the directory structure
-# Add a script to handle renaming paths in the ZIP file
-#RUN echo '#!/bin/sh' > /tmp/rename_in_zip.sh && \
-#    echo 'CMD_INSTRUCTIONS=$(7z l -ba -slt "$1" | grep "\\\\" | sed "s/^Path = //g" | awk '"'"'{ print "\"" $0 "\" \"" gensub(/\\\\/, "/", "g", $0) "\""; }'"'"' | paste -s -d " ")' >> /tmp/rename_in_zip.sh && \
-#    echo 'CMD_7Z="7z rn \"$1\" $CMD_INSTRUCTIONS"' >> /tmp/rename_in_zip.sh && \
-#    echo 'eval "$CMD_7Z"' >> /tmp/rename_in_zip.sh && \
-#    chmod +x /tmp/rename_in_zip.sh
-
-# Run the script on the ZIP file to rename paths within the archive
-#RUN /tmp/rename_in_zip.sh /tmp/PowerCLI.zip
-
-# Optional: Verify renamed paths
-#RUN 7z l /tmp/tmp/PowerCLI.zip
-
-
-
-
-#FROM mcr.microsoft.com/powershell:latest
-# Install VMware PowerCLI
 RUN pwsh -Command " \
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; Get-Module -ListAvailable VMware.PowerCLI; Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -AllowClobber; \
     Import-Module VMware.PowerCLI -Verbose"
-    
+
 FROM msft-install as vmware-install-amd64
 
 # Install and setup VMware.PowerCLI PowerShell Module
