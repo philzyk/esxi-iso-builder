@@ -87,6 +87,7 @@ ADD ${DOTNET_PACKAGE_URL} /tmp/${DOTNET_PACKAGE}
 RUN mkdir -p ${DOTNET_ROOT} \
     && tar zxf /tmp/${DOTNET_PACKAGE} -C ${DOTNET_ROOT} \
     && rm /tmp/${DOTNET_PACKAGE}
+RUN ls -lah "$DOTNET_ROOT"
 
 # PowerShell Core 7.2 (LTS)
 # apt package(s): ca-certificates, less, libssl1.1, libicu66, wget, unzip
@@ -101,6 +102,9 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
     && ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh \
     && rm ${PS_PACKAGE} \
     && echo /usr/bin/pwsh >> /etc/shells
+RUN cat /etc/shells
+RUN pwsh -Command "$PSVersionTable"
+RUN pwsh -Command "Set-ExecutionPolicy RemoteSigned -Scope AllUsers"
 
 FROM msft-install as vmware-install-arm64
 
@@ -140,6 +144,7 @@ RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN chmod -R 755 "$MODULE_PATH"
 RUN ls -lah "$MODULE_PATH"/VMware.PowerCLI/
 RUN rm /tmp/PowerCLI.zip
+RUN pwsh -Command "$PSVersionTable"
 RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
 #RUN pwsh -Command "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser"
 #RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI" 
