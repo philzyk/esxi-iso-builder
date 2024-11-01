@@ -128,6 +128,8 @@ RUN pwsh -Command "Write-Output \$PSVersionTable" \
     && pwsh -Command "dotnet --list-runtimes" \
     && pwsh -Command "\$DebugPreference='Continue'; Write-Output 'Debug preference set to Continue'"
 
+
+
 FROM msft-install as vmware-install-arm64
 
 #  PowerShell Core for ARM
@@ -141,6 +143,13 @@ RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 #RUN chmod -R 755 "$MODULE_PATH"
 RUN ls -lah "$MODULE_PATH"/VMware.PowerCLI/
 RUN rm /tmp/PowerCLI.zip
+
+RUN pwsh -c "Save-Module -Name VMware.PowerCLI -Path ~/"
+RUN pwsh -c "Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force"
+RUN pwsh -c "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP 0 -Confirm:0"
+RUN pwsh -c "Set-PowerCLIConfiguration -Scope User -InvalidCertificateAction Ignore -Confirm:0"
+RUN pwsh -c "Get-Module -ListAvailable VMware.PowerCLI"
+RUN pwsh -c "Import-Module VMware.PowerCLI"
 
 FROM msft-install as vmware-install-amd64
 
