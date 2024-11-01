@@ -77,37 +77,35 @@ ARG PS_ARCH=arm64
 # Install .NET Core Runtime and PowerShell in the target architecture stage
 FROM linux-${TARGETARCH} AS msft-install
 
-# Microsoft .NET SDK for VMware PowerCLI
+# Microsoft .NET Core 3.1 Runtime for VMware PowerCLI
+# apt package(s): libc6m, libgcc1, libgssapi-krb5-2, libicu66, libssl1.1, libstdc++6, unzip, wget, zlib1g
 ARG DOTNET_VERSION=3.1.32
-ARG DOTNET_ARCH=x64  # Specify the desired architecture (x64, arm64, etc.)
-ARG DOTNET_PACKAGE=dotnet-sdk-${DOTNET_VERSION}-linux-${DOTNET_ARCH}.tar.gz
-ARG DOTNET_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Sdk/${DOTNET_VERSION}/${DOTNET_PACKAGE}
+ARG DOTNET_PACKAGE=dotnet-runtime-${DOTNET_VERSION}-linux-${DOTNET_ARCH}.tar.gz
+ARG DOTNET_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Runtime/${DOTNET_VERSION}/${DOTNET_PACKAGE}
+ARG POWERSHELL_VERSION=7.2
+
 ENV DOTNET_ROOT=/opt/microsoft/dotnet/${DOTNET_VERSION}
 ENV PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
 
-# Download and install .NET SDK
-RUN mkdir -p ${DOTNET_ROOT} && \
-    curl -Lo /tmp/${DOTNET_PACKAGE} ${DOTNET_PACKAGE_URL} && \
-    if [[ ! -f /tmp/${DOTNET_PACKAGE} ]]; then \
-        echo "Failed to download ${DOTNET_PACKAGE_URL}"; \
-        exit 1; \
-    fi && \
-    tar zxf /tmp/${DOTNET_PACKAGE} -C ${DOTNET_ROOT} && \
-    rm /tmp/${DOTNET_PACKAGE}
+ADD ${DOTNET_PACKAGE_URL} /tmp/${DOTNET_PACKAGE}
+RUN mkdir -p ${DOTNET_ROOT} \
+    && tar zxf /tmp/${DOTNET_PACKAGE} -C ${DOTNET_ROOT} \
+    && rm /tmp/${DOTNET_PACKAGE}
 
-# Install PowerShell Core with version selection via ARG
-ARG PS_VERSION=7.2.5  # Specify the desired PowerShell version
-ARG PS_ARCH=x64  # Specify the desired architecture (x64, arm64)
-RUN PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_VERSION} && \
-    PS_PACKAGE_NAME=powershell-${PS_VERSION}-linux-${PS_ARCH}.tar.gz && \
-    PS_PACKAGE_URL=https://github.com/PowerShell/PowerShell/releases/download/v${PS_VERSION}/${PS_PACKAGE_NAME} && \
-    curl -Lo /tmp/${PS_PACKAGE_NAME} ${PS_PACKAGE_URL} && \
-    mkdir -p ${PS_INSTALL_FOLDER} && \
-    tar zxf /tmp/${PS_PACKAGE_NAME} -C ${PS_INSTALL_FOLDER} && \
-    chmod a+x,o-w ${PS_INSTALL_FOLDER}/pwsh && \
-    ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh && \
-    rm /tmp/${PS_PACKAGE_NAME} && \
-    echo /usr/bin/pwsh >> /etc/shells
+# PowerShell Core (LTS)
+# apt package(s): ca-certificates, less, libssl1.1, libicu66, wget, unzip
+ARG POWERSHELL_VERSION=7.4.6
+RUN PS_MAJOR_VERSION=${POWERSHELL_VERSION} \
+    && PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} \
+    && PS_PACKAGE=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4 | xargs basename) \
+    && PS_PACKAGE_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4) \
+    && curl -LO ${PS_PACKAGE_URL} \
+    && mkdir -p ${PS_INSTALL_FOLDER} \
+    && tar zxf ${PS_PACKAGE} -C ${PS_INSTALL_FOLDER} \
+    && chmod a+x,o-w ${PS_INSTALL_FOLDER}/pwsh \
+    && ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh \
+    && rm ${PS_PACKAGE} \
+    && echo /usr/bin/pwsh >> /etc/shells
 
 # Check installed versions of .NET and PowerShell
 RUN pwsh -Command "$PSVersionTable"
