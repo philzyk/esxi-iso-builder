@@ -126,7 +126,7 @@ RUN echo "PowerShell Major Version: ${PS_MAJOR_VERSION}" \
 
 # Check installed versions of .NET and PowerShell
 RUN pwsh -Command "Write-Output \$PSVersionTable" \
-    && pwsh -Command "dotnet --list-runtimes"
+    && pwsh -Command "dotnet --list-runtimes" && pwsh -Command "$DebugPreference=Continue"
 
 FROM msft-install as vmware-install-arm64
 
@@ -167,7 +167,7 @@ RUN mkdir -p /home/coder/files/{cfg_files,iso_temp} \
     && mkdir -p /home/coder/files/esxi6_7/{repo_zip_esxi6_7,ready_iso_esxi6_7,drivers_esxi6_7} \
     && mkdir -p /home/coder/files/esxi7/{repo_zip_esxi7,ready_iso_esxi7,drivers_esxi7} \
     && mkdir -p /home/coder/files/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8}
-RUN pwsh -Command "$env:DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER=0"
+RUN pwsh -Command "$env:DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER='0'"
 RUN pwsh -Command "$env:PSModulePath -split ';'"
 RUN ls -lah /usr/local/share/powershell/Modules/
 RUN pwsh -Command "Get-Host"
