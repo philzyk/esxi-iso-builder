@@ -138,7 +138,7 @@ RUN mkdir -p "$MODULE_PATH"
 RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
 RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN chmod -R 755 "$MODULE_PATH"
-RUN ls -lah "$MODULE_PATH"
+RUN ls -lah "$MODULE_PATH"/VMware.PowerCLI/
 RUN rm /tmp/PowerCLI.zip
 RUN pwsh -Command " \
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; Get-Module -ListAvailable VMware.PowerCLI; Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -AllowClobber; \
