@@ -112,16 +112,20 @@ RUN pwsh -Command "Write-Output \$PSVersionTable" \
 FROM msft-install as vmware-install-arm64
 
 #  PowerShell Core for ARM
-FROM mcr.microsoft.com/powershell:7.2.0-ubuntu-20.04-arm64
+#FROM mcr.microsoft.com/powershell:7.2.0-ubuntu-20.04-arm64
 
-# VMware PowerCLI RequiredVersion 13.0.0
+RUN pwsh -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12"
+
+RUN pwsh -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted"
+
+# VMware PowerCLI RequiredVersion 13.0.0.20829139
 RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Force -AllowClobber"
 
 # Turn off CEIP
 RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false"
 
 # Check PowerCLI
-RUN pwsh -Command "Get-Module -Name VMware.PowerCLI -ListAvailable | Where-Object { $_.Version -eq '13.0.0' }"
+RUN pwsh -Command "Get-Module -Name VMware.PowerCLI -ListAvailable | Where-Object { $_.Version -eq '13.0.0.20829139' }"
 
 
 FROM msft-install as vmware-install-amd64
