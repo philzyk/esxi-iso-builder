@@ -70,9 +70,9 @@ FROM base AS linux-arm64
 ARG DOTNET_ARCH=arm64
 ARG PS_ARCH=arm64
 
-FROM base AS linux-arm
-ARG DOTNET_ARCH=arm
-ARG PS_ARCH=arm32
+#FROM base AS linux-arm
+#ARG DOTNET_ARCH=arm
+#ARG PS_ARCH=arm32
 
 # Install .NET Core Runtime and PowerShell in the target architecture stage
 FROM linux-${TARGETARCH} AS msft-install
@@ -90,9 +90,6 @@ RUN mkdir -p ${DOTNET_ROOT} && \
     tar zxf /tmp/${DOTNET_PACKAGE} -C ${DOTNET_ROOT} && \
     rm /tmp/${DOTNET_PACKAGE}
 
-# Verify .NET installation
-RUN ls -lah "$DOTNET_ROOT"
-
 # Install PowerShell Core 7.2 (LTS)
 RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | cut -d 'v' -f 2 | cut -d '.' -f 1) && \
     PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} && \
@@ -105,10 +102,6 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
     ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh && \
     rm ${PS_PACKAGE} && \
     echo /usr/bin/pwsh >> /etc/shells
-
-# Verify PowerShell installation
-RUN cat /etc/shells && \
-    pwsh -Command "$PSVersionTable"
 
 FROM msft-install as vmware-install-arm64
 
@@ -148,12 +141,12 @@ RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN chmod -R 755 "$MODULE_PATH"
 RUN ls -lah "$MODULE_PATH"/VMware.PowerCLI/
 RUN rm /tmp/PowerCLI.zip
-RUN pwsh -Command "$PSVersionTable"
+#RUN pwsh -Command "$PSVersionTable"
 #RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
 #RUN pwsh -Command "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser"
 #RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI" 
 #RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Force -AllowClobber"
-RUN pwsh -Command "Import-Module VMware.PowerCLI -Verbose"
+#RUN pwsh -Command "Import-Module VMware.PowerCLI -Verbose"
 
 FROM msft-install as vmware-install-amd64
 
@@ -175,6 +168,11 @@ RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && rm /home/$USERNAME/.local/bin/get-pip.py
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
+
+# Clean up
+RUN apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Switching back to interactive after container build
 ENV DEBIAN_FRONTEND=dialog
