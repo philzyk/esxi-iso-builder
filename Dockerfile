@@ -92,7 +92,7 @@ RUN mkdir -p ${DOTNET_ROOT} \
 # PowerShell Core 7.2 (LTS)
 ENV PS_MAJOR_VERSION=7.2.0
 #RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | cut -d 'v' -f 2 | cut -d '.' -f 1) \
-RUN echo "PowerShell Major Version: ${PS_MAJOR_VERSION} \
+RUN echo "PowerShell Major Version: ${PS_MAJOR_VERSION}" \
     && echo "PowerShell Major Version: ${PS_MAJOR_VERSION}" \
     && PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} \
     && PS_PACKAGE=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4 | xargs basename) \
