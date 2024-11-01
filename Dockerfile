@@ -90,14 +90,30 @@ RUN mkdir -p ${DOTNET_ROOT} \
     && rm /tmp/${DOTNET_PACKAGE}
 
 # PowerShell Core 7.2 (LTS)
-ENV PS_MAJOR_VERSION=7.2.0
+#ENV PS_MAJOR_VERSION=7.2.0
 #RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | cut -d 'v' -f 2 | cut -d '.' -f 1) \
+#RUN echo "PowerShell Major Version: ${PS_MAJOR_VERSION}" \
+#    && echo "PowerShell Major Version: ${PS_MAJOR_VERSION}" \
+#    && PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} \
+#    && PS_PACKAGE=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4 | xargs basename) \
+#    && echo "PowerShell Package: ${PS_PACKAGE}" \
+#    && PS_PACKAGE_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4) \
+#    && echo "PowerShell Package URL: ${PS_PACKAGE_URL}" \
+#    && curl -LO ${PS_PACKAGE_URL} \
+#    && mkdir -p ${PS_INSTALL_FOLDER} \
+#    && tar zxf ${PS_PACKAGE} -C ${PS_INSTALL_FOLDER} \
+#    && chmod a+x,o-w ${PS_INSTALL_FOLDER}/pwsh \
+#    && ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh \
+#    && rm ${PS_PACKAGE} \
+#    && echo /usr/bin/pwsh >> /etc/shells
+
+# PowerShell Core 7.2 (LTS)
+ENV PS_MAJOR_VERSION=7.2.0
 RUN echo "PowerShell Major Version: ${PS_MAJOR_VERSION}" \
-    && echo "PowerShell Major Version: ${PS_MAJOR_VERSION}" \
     && PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} \
-    && PS_PACKAGE=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4 | xargs basename) \
+    && PS_PACKAGE=powershell-${PS_MAJOR_VERSION}-linux-${PS_ARCH}.tar.gz \
+    && PS_PACKAGE_URL=https://github.com/PowerShell/PowerShell/releases/download/v${PS_MAJOR_VERSION}/${PS_PACKAGE} \
     && echo "PowerShell Package: ${PS_PACKAGE}" \
-    && PS_PACKAGE_URL=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4) \
     && echo "PowerShell Package URL: ${PS_PACKAGE_URL}" \
     && curl -LO ${PS_PACKAGE_URL} \
     && mkdir -p ${PS_INSTALL_FOLDER} \
@@ -106,6 +122,7 @@ RUN echo "PowerShell Major Version: ${PS_MAJOR_VERSION}" \
     && ln -s ${PS_INSTALL_FOLDER}/pwsh /usr/bin/pwsh \
     && rm ${PS_PACKAGE} \
     && echo /usr/bin/pwsh >> /etc/shells
+
 
 # Check installed versions of .NET and PowerShell
 RUN pwsh -Command "Write-Output \$PSVersionTable" \
