@@ -79,7 +79,7 @@ FROM linux-${TARGETARCH} AS msft-install
 
 # Microsoft .NET SDK for VMware PowerCLI
 ARG DOTNET_VERSION=3.1.32
-ARG DOTNET_ARCH=x64  # Specify the desired architecture (x64, arm64, arm)
+ARG DOTNET_ARCH=x64  # Specify the desired architecture (x64, arm64, etc.)
 ARG DOTNET_PACKAGE=dotnet-sdk-${DOTNET_VERSION}-linux-${DOTNET_ARCH}.tar.gz
 ARG DOTNET_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Sdk/${DOTNET_VERSION}/${DOTNET_PACKAGE}
 ENV DOTNET_ROOT=/opt/microsoft/dotnet/${DOTNET_VERSION}
@@ -88,12 +88,16 @@ ENV PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
 # Download and install .NET SDK
 RUN mkdir -p ${DOTNET_ROOT} && \
     curl -Lo /tmp/${DOTNET_PACKAGE} ${DOTNET_PACKAGE_URL} && \
+    if [[ ! -f /tmp/${DOTNET_PACKAGE} ]]; then \
+        echo "Failed to download ${DOTNET_PACKAGE_URL}"; \
+        exit 1; \
+    fi && \
     tar zxf /tmp/${DOTNET_PACKAGE} -C ${DOTNET_ROOT} && \
     rm /tmp/${DOTNET_PACKAGE}
 
 # Install PowerShell Core with version selection via ARG
 ARG PS_VERSION=7.2.5  # Specify the desired PowerShell version
-ARG PS_ARCH=x64  # Specify the desired architecture (x64, arm64, arm)
+ARG PS_ARCH=x64  # Specify the desired architecture (x64, arm64)
 RUN PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_VERSION} && \
     PS_PACKAGE_NAME=powershell-${PS_VERSION}-linux-${PS_ARCH}.tar.gz && \
     PS_PACKAGE_URL=https://github.com/PowerShell/PowerShell/releases/download/v${PS_VERSION}/${PS_PACKAGE_NAME} && \
