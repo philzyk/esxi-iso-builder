@@ -102,9 +102,9 @@ RUN pwsh -Command "Write-Output \$PSVersionTable" \
 
 FROM msft-install AS vmware-install-arm64
 
-#  PowerShell Core for ARM (important to use Save-Module, as it's not installing on-line)
-RUN pwsh -c "Save-Module -Name VMware.PowerCLI  -RequiredVersion 13.0.0.20829139 -Path ~/" \
-    && pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Force -Verbose -SkipPublisherCheck" \
+# PowerShell Core for ARM (important to use Save-Module, as it's not installing on-line)
+RUN pwsh -c "Save-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Path /tmp/PowerCLI-Install" \
+    && pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Force -Verbose -SkipPublisherCheck -Path /tmp/PowerCLI-Install" \
     && pwsh -Command "Remove-Item -Recurse -Force /tmp/PowerCLI-Install"
 
 FROM msft-install AS vmware-install-amd64
