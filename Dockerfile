@@ -77,24 +77,34 @@ ARG PS_ARCH=arm64
 # Install .NET Core Runtime and PowerShell in the target architecture stage
 FROM linux-${TARGETARCH} AS msft-install
 
-# Microsoft .NET Core 3.1 Runtime for VMware PowerCLI
+# Microsoft .NET Core 3.1 Runtime and SDK for VMware PowerCLI
 # apt package(s): libc6m, libgcc1, libgssapi-krb5-2, libicu66, libssl1.1, libstdc++6, unzip, wget, zlib1g
 ARG DOTNET_VERSION=3.1.32
-ARG DOTNET_PACKAGE=dotnet-runtime-${DOTNET_VERSION}-linux-${DOTNET_ARCH}.tar.gz
-ARG DOTNET_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Runtime/${DOTNET_VERSION}/${DOTNET_PACKAGE}
-ARG POWERSHELL_VERSION=7.2
+ARG DOTNET_RUNTIME_PACKAGE=dotnet-runtime-${DOTNET_VERSION}-linux-${DOTNET_ARCH}.tar.gz
+ARG DOTNET_RUNTIME_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Runtime/${DOTNET_VERSION}/${DOTNET_RUNTIME_PACKAGE}
+ARG DOTNET_SDK_PACKAGE=dotnet-sdk-${DOTNET_VERSION}-linux-${DOTNET_ARCH}.tar.gz
+ARG DOTNET_SDK_PACKAGE_URL=https://dotnetcli.azureedge.net/dotnet/Sdk/${DOTNET_VERSION}/${DOTNET_SDK_PACKAGE}
+
+ARG POWERSHELL_VERSION=7.4.6
 
 ENV DOTNET_ROOT=/opt/microsoft/dotnet/${DOTNET_VERSION}
 ENV PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
 
-ADD ${DOTNET_PACKAGE_URL} /tmp/${DOTNET_PACKAGE}
-RUN mkdir -p ${DOTNET_ROOT} \
-    && tar zxf /tmp/${DOTNET_PACKAGE} -C ${DOTNET_ROOT} \
-    && rm /tmp/${DOTNET_PACKAGE}
+# Create dotnet directory
+RUN mkdir -p ${DOTNET_ROOT}
+
+# Download and install .NET Runtime
+ADD ${DOTNET_RUNTIME_PACKAGE_URL} /tmp/${DOTNET_RUNTIME_PACKAGE}
+RUN tar zxf /tmp/${DOTNET_RUNTIME_PACKAGE} -C ${DOTNET_ROOT} \
+    && rm /tmp/${DOTNET_RUNTIME_PACKAGE}
+
+# Download and install .NET SDK
+ADD ${DOTNET_SDK_PACKAGE_URL} /tmp/${DOTNET_SDK_PACKAGE}
+RUN tar zxf /tmp/${DOTNET_SDK_PACKAGE} -C ${DOTNET_ROOT} \
+    && rm /tmp/${DOTNET_SDK_PACKAGE}
 
 # PowerShell Core (LTS)
 # apt package(s): ca-certificates, less, libssl1.1, libicu66, wget, unzip
-ARG POWERSHELL_VERSION=7.4.6
 RUN PS_MAJOR_VERSION=${POWERSHELL_VERSION} \
     && PS_INSTALL_FOLDER=/opt/microsoft/powershell/${PS_MAJOR_VERSION} \
     && PS_PACKAGE=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/powershell-release\?tag\=lts | sed 's#https://github.com#https://api.github.com/repos#g; s#tag/#tags/#' | xargs curl -s | grep browser_download_url | grep linux-${PS_ARCH}.tar.gz | cut -d '"' -f 4 | xargs basename) \
@@ -107,6 +117,11 @@ RUN PS_MAJOR_VERSION=${POWERSHELL_VERSION} \
     && rm ${PS_PACKAGE} \
     && echo /usr/bin/pwsh >> /etc/shells
 
+# Check installed versions of .NET and PowerShell
+RUN pwsh -Command "$PSVersionTable.PSVersion" \
+    && pwsh -Command "dotnet --list-runtimes" \
+    && pwsh -Command "dotnet --version"
+    
 # Check installed versions of .NET and PowerShell
 RUN pwsh -Command "$PSVersionTable"
 RUN pwsh -Command "dotnet --version"
