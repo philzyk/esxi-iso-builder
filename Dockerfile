@@ -136,6 +136,7 @@ ARG MODULE_PATH="/usr/local/share/powershell/Modules"
 RUN wget -O /tmp/PowerCLI.zip "$POWERCLI_URL"
 RUN mkdir -p "$MODULE_PATH"
 #RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
+RUN 7z rn /tmp/PowerCLI.zip $(7z l -slt /tmp/PowerCLI.zip | awk '/Path =/ {print $3, gensub(/\\/, "/", "g", $3)}' | paste -s -)
 # RUN pwsh -Command "Expand-Archive -LiteralPath '/tmp/PowerCLI.zip' -DestinationPath "$MODULE_PATH" -PassThru"
 RUN 7zz x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN rm /tmp/PowerCLI.zip
@@ -160,16 +161,21 @@ RUN rm /tmp/PowerCLI.zip
 # Track directories that have already been created
 
 # Walk through the directory structure
-RUN find /usr/local/share/powershell/Modules -type f | while IFS= read -r filepath; do \
-    if echo "$filepath" | grep -q '\\'; then \
-        alt_filepath="${filepath//\\//}"; \
-        alt_filepath="${alt_filepath#/}"; \
-        alt_dirname="$(dirname "$alt_filepath")"; \
-        full_dirname="$(dirname "$filepath")/$alt_dirname"; \
-        [ ! -d "$full_dirname" ] && mkdir -p "$full_dirname"; \
-        mv "$filepath" "${full_dirname}/$(basename "$alt_filepath")"; \
-    fi; \
-done
+# Add a script to handle renaming paths in the ZIP file
+#RUN echo '#!/bin/sh' > /tmp/rename_in_zip.sh && \
+#    echo 'CMD_INSTRUCTIONS=$(7z l -ba -slt "$1" | grep "\\\\" | sed "s/^Path = //g" | awk '"'"'{ print "\"" $0 "\" \"" gensub(/\\\\/, "/", "g", $0) "\""; }'"'"' | paste -s -d " ")' >> /tmp/rename_in_zip.sh && \
+#    echo 'CMD_7Z="7z rn \"$1\" $CMD_INSTRUCTIONS"' >> /tmp/rename_in_zip.sh && \
+#    echo 'eval "$CMD_7Z"' >> /tmp/rename_in_zip.sh && \
+#    chmod +x /tmp/rename_in_zip.sh
+
+# Run the script on the ZIP file to rename paths within the archive
+#RUN /tmp/rename_in_zip.sh /tmp/PowerCLI.zip
+
+# Optional: Verify renamed paths
+#RUN 7z l /tmp/tmp/PowerCLI.zip
+
+
+
 
 #FROM mcr.microsoft.com/powershell:latest
 # Install VMware PowerCLI
