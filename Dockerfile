@@ -108,7 +108,7 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 # Verify PowerShell installation
 RUN cat /etc/shells && \
     pwsh -Command "$PSVersionTable" && \
-    pwsh -Command "Set-ExecutionPolicy RemoteSigned -Scope AllUsers"
+    pwsh -Command "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser"
 
 FROM msft-install as vmware-install-arm64
 
