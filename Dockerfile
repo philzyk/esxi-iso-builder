@@ -24,10 +24,7 @@ RUN apt-get update \
         python3.7-distutils \
         sudo \
         whois \
-        unzip \
         p7zip-full \
-        file \
-        wget \
         gawk \
         less \
         libc6 \
@@ -134,13 +131,14 @@ ARG POWERCLI_URL="https://vdc-download.vmware.com/vmwb-repository/dcr-public/028
 ARG MODULE_PATH="/usr/local/share/powershell/Modules"
 
 # Download and install PowerCLI
-RUN wget -O /tmp/PowerCLI.zip "$POWERCLI_URL"
+ADD ${POWERCLIURL} /tmp/PowerCLI.zip
 RUN mkdir -p "$MODULE_PATH"
 # RUN 7z rn /tmp/PowerCLI.zip $(7z l -slt /tmp/PowerCLI.zip | awk '/Path =/ {print $3, gensub(/\\/, "/", "g", $3)}' | paste -s -)
 # RUN pwsh -Command "Expand-Archive -LiteralPath '/tmp/PowerCLI.zip' -DestinationPath "$MODULE_PATH" -PassThru"
 RUN zipfile="/tmp/PowerCLI.zip" && temp_file=$(mktemp) && 7z l -slt "$zipfile" | awk '/^Path = / {old_path=substr($0, 7); new_path=old_path; gsub(/\\/, "/", new_path); if(old_path != new_path) print old_path " = " new_path}' > "$temp_file" && [ -s "$temp_file" ] && 7z rn "$zipfile" "@$temp_file"; rm -f "$temp_file"
 RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
-RUN ls -lah /usr/local/share/powershell/Modules/
+RUN chmod -R 755 "$MODULE_PATH"
+RUN ls -lah "$MODULE_PATH"
 RUN rm /tmp/PowerCLI.zip
 RUN pwsh -Command " \
     Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; Get-Module -ListAvailable VMware.PowerCLI; Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -AllowClobber; \
@@ -166,8 +164,6 @@ RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && rm /home/$USERNAME/.local/bin/get-pip.py
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
-
-
 
 # Switching back to interactive after container build
 ENV DEBIAN_FRONTEND=dialog
