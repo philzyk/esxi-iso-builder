@@ -142,17 +142,31 @@ FROM msft-install as vmware-install-arm64
 #RUN pwsh -Command "Import-Module VMware.PowerCLI -Verbose"
 
 
-ARG POWERCLI_URL="https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip"
-ARG MODULE_PATH="/usr/local/share/powershell/Modules"
+#ARG POWERCLI_URL="https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip"
+#ARG MODULE_PATH="/usr/local/share/powershell/Modules"
 
 # Download and install PowerCLI
-RUN curl -L -o /tmp/PowerCLI.zip "$POWERCLI_URL"
-RUN mkdir -p "$MODULE_PATH"
-RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
-RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
+#RUN curl -L -o /tmp/PowerCLI.zip "$POWERCLI_URL"
+#RUN mkdir -p "$MODULE_PATH"
+#RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
+#RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 #RUN chmod -R 755 "$MODULE_PATH"
-RUN ls -lah "$MODULE_PATH"/VMware.PowerCLI/
-RUN rm /tmp/PowerCLI.zip
+#RUN ls -lah "$MODULE_PATH"/VMware.PowerCLI/
+#RUN rm /tmp/PowerCLI.zip
+
+
+#  PowerShell Core for ARM
+FROM mcr.microsoft.com/powershell:7.2.0-ubuntu-20.04-arm64
+
+# VMware PowerCLI RequiredVersion 12.4.0
+RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 12.4.0 -Scope AllUsers -Force -AllowClobber"
+
+# Turn off CEIP
+RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false"
+
+# Check PowerCLI
+RUN pwsh -Command "Get-Module -Name VMware.PowerCLI -ListAvailable | Where-Object { $_.Version -eq '12.4.0' }"
+
 
 FROM msft-install as vmware-install-amd64
 
