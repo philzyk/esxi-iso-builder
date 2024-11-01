@@ -115,7 +115,7 @@ FROM msft-install as vmware-install-arm64
 FROM mcr.microsoft.com/powershell:7.2.0-ubuntu-20.04-arm64
 
 # VMware PowerCLI RequiredVersion 13.0.0
-RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0 -Scope AllUsers -Force -AllowClobber"
+RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Force -AllowClobber"
 
 # Turn off CEIP
 RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$false -Confirm:\$false"
