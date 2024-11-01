@@ -100,19 +100,19 @@ RUN pwsh -Command "Write-Output \$PSVersionTable" \
     && pwsh -Command "dotnet --list-runtimes" \
     && pwsh -Command "\$DebugPreference='Continue'; Write-Output 'Debug preference set to Continue'"
 
-FROM msft-install as vmware-install-arm64
+FROM msft-install AS vmware-install-arm64
 
 #  PowerShell Core for ARM (important to use Save-Module, as it's not installing on-line)
 RUN pwsh -c "Save-Module -Name VMware.PowerCLI  -RequiredVersion 13.0.0.20829139 -Path ~/" \
     && pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Force -Verbose -SkipPublisherCheck" \
     && pwsh -Command "Remove-Item -Recurse -Force /tmp/PowerCLI-Install"
 
-FROM msft-install as vmware-install-amd64
+FROM msft-install AS vmware-install-amd64
 
 # Install and setup VMware.PowerCLI PowerShell Module
 RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force -Verbose"
 
-FROM vmware-install-${TARGETARCH} as vmware-install-common
+FROM vmware-install-${TARGETARCH} AS vmware-install-common
 
 # Installing Python 3.7 libs: six psutil lxml pyopenssl
 # Needed apt package(s): gcc, wget, python3, python3-dev, python3-distutils
@@ -130,7 +130,7 @@ RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${
     && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 # Making working directories for esxi-iso-biulder
-RUN mkdir -p /home/coder/files/{cfg_files,iso_temp} \
+RUN mkdir -p /home/$USERNAME/files/{cfg_files,iso_temp} \
     && mkdir -p /home/coder/files/esxi6_7/{repo_zip_esxi6_7,ready_iso_esxi6_7,drivers_esxi6_7} \
     && mkdir -p /home/coder/files/esxi7/{repo_zip_esxi7,ready_iso_esxi7,drivers_esxi7} \
     && mkdir -p /home/coder/files/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8}
