@@ -173,8 +173,6 @@ RUN python3.7 /home/$USERNAME/.local/bin/get-pip.py \
     && python3.7 -m pip install --no-cache-dir six psutil lxml pyopenssl \
     && rm /home/$USERNAME/.local/bin/get-pip.py
 
-RUN pwsh -Command "Get-Module -ListAvailable | Where-Object { $_.Name -eq 'VMware.PowerCLI' }"
-
 RUN pwsh -Command Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${VMWARECEIP} -Confirm:\$false \
     && pwsh -Command Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false
 
