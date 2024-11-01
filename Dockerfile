@@ -160,28 +160,15 @@ RUN rm /tmp/PowerCLI.zip
 # Track directories that have already been created
 
 # Walk through the directory structure
-RUN declare -A made_dirs && find /usr/local/share/powershell/Modules -type f | while IFS= read -r filepath; do \
-    # Check if filename contains a backslash
-    if [[ "$filepath" == *\\* ]]; then \
-        # Replace backslashes with forward slashes in the filename
-        alt_filepath="${filepath//\\//}" \
-        
-        # Remove the leading slash if present
-        alt_filepath="${alt_filepath#/}" \
-
-        # Separate the directory path from the filename
-        alt_dirname="$(dirname "$alt_filepath")" \
-        full_dirname="$(dirname "$filepath")/$alt_dirname" \
-
-        # Create the directory if it hasn't been created already
-        if [[ -z "${made_dirs[$full_dirname]}" ]]; then \
-            mkdir -p "$full_dirname" \
-            made_dirs["$full_dirname"]=1 \
-        fi \
-
-        # Rename the file with the corrected path
-        mv "$filepath" "${full_dirname}/$(basename "$alt_filepath")" \
-    fi \
+RUN find /usr/local/share/powershell/Modules -type f | while IFS= read -r filepath; do \
+    if echo "$filepath" | grep -q '\\'; then \
+        alt_filepath="${filepath//\\//}"; \
+        alt_filepath="${alt_filepath#/}"; \
+        alt_dirname="$(dirname "$alt_filepath")"; \
+        full_dirname="$(dirname "$filepath")/$alt_dirname"; \
+        [ ! -d "$full_dirname" ] && mkdir -p "$full_dirname"; \
+        mv "$filepath" "${full_dirname}/$(basename "$alt_filepath")"; \
+    fi; \
 done
 
 #FROM mcr.microsoft.com/powershell:latest
