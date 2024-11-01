@@ -169,15 +169,12 @@ RUN mkdir -p /home/coder/files/{cfg_files,iso_temp} \
     && mkdir -p /home/coder/files/esxi6_7/{repo_zip_esxi6_7,ready_iso_esxi6_7,drivers_esxi6_7} \
     && mkdir -p /home/coder/files/esxi7/{repo_zip_esxi7,ready_iso_esxi7,drivers_esxi7} \
     && mkdir -p /home/coder/files/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8}
+RUN find /usr/local -iname VMware.PowerCLI.psd1
+# Split PSModulePath to check directories (single line output for clarity in Docker)
+RUN pwsh -Command "$env:PSModulePath -split ';' | ForEach-Object { Write-Host $_ }"
 
-RUN pwsh -Command "$env:PSModulePath -split ';'"
-RUN pwsh -Command "
-    try {
-        Import-Module VMware.PowerCLI -Verbose
-    } catch {
-        Write-Host 'Failed to import module: ' $_.Exception.Message
-    }
-"
+# Import VMware.PowerCLI with error handling in a single line
+RUN pwsh -Command "try { Import-Module VMware.PowerCLI -Verbose } catch { Write-Host 'Failed to import module:' $_.Exception.Message }"
 #RUN pwsh -Command "Import-Module -Name /home/$USERNAME/.local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI/VMware.PowerCLI.psd1"
 #RUN pwsh -Command "$env:DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER='0'"
 #RUN pwsh -Command "$env:PSModulePath -split ';'"
