@@ -135,7 +135,7 @@ ADD ${POWERCLIURL} /tmp/PowerCLI.zip
 RUN mkdir -p "$MODULE_PATH"
 # RUN 7z rn /tmp/PowerCLI.zip $(7z l -slt /tmp/PowerCLI.zip | awk '/Path =/ {print $3, gensub(/\\/, "/", "g", $3)}' | paste -s -)
 # RUN pwsh -Command "Expand-Archive -LiteralPath '/tmp/PowerCLI.zip' -DestinationPath "$MODULE_PATH" -PassThru"
-RUN zipfile="/tmp/PowerCLI.zip" && temp_file=$(mktemp) && 7z l -slt "$zipfile" | awk '/^Path = / {old_path=substr($0, 7); new_path=old_path; gsub(/\\/, "/", new_path); if(old_path != new_path) print old_path " = " new_path}' > "$temp_file" && [ -s "$temp_file" ] && 7z rn "$zipfile" "@$temp_file"; rm -f "$temp_file"
+RUN 7z rn /tmp/PowerCLI.zip $(7z l /tmp/PowerCLI.zip | grep '\\' | awk '{ print $6, gensub(/\\/, "/", "g", $6); }' | paste -s)
 RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN chmod -R 755 "$MODULE_PATH"
 RUN ls -lah "$MODULE_PATH"
