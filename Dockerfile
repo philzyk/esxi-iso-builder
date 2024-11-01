@@ -105,7 +105,7 @@ RUN PS_MAJOR_VERSION=$(curl -Ls -o /dev/null -w %{url_effective} https://aka.ms/
 FROM msft-install as vmware-install-arm64
 
 ARG ARCH_URL=https://7-zip.org/a/7z2408-linux-arm64.tar.xz
-ADD curl -L ${ARCH_URL} -o /tmp/7z2408-linux-arm64.tar.xz
+ADD curl -o /tmp/7z2408-linux-arm64.tar.xz ${ARCH_URL} 
 RUN mkdir -p /tmp/7zip && \
     tar -xf /tmp/7z2408-linux-arm64.tar.xz -C /tmp/7zip && \
     rm -rf /tmp/7z2408-linux-arm64.tar.xz && \
@@ -131,7 +131,7 @@ ARG POWERCLI_URL="https://vdc-download.vmware.com/vmwb-repository/dcr-public/028
 ARG MODULE_PATH="/usr/local/share/powershell/Modules"
 
 # Download and install PowerCLI
-ADD curl -L ${POWERCLIURL} -o /tmp/PowerCLI.zip
+ADD curl -o /tmp/PowerCLI.zip ${POWERCLIURL}
 RUN mkdir -p "$MODULE_PATH"
 # RUN 7z rn /tmp/PowerCLI.zip $(7z l -slt /tmp/PowerCLI.zip | awk '/Path =/ {print $3, gensub(/\\/, "/", "g", $3)}' | paste -s -)
 # RUN pwsh -Command "Expand-Archive -LiteralPath '/tmp/PowerCLI.zip' -DestinationPath "$MODULE_PATH" -PassThru"
