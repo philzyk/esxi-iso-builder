@@ -140,9 +140,11 @@ RUN 7z x /tmp/PowerCLI.zip -o"$MODULE_PATH"
 RUN chmod -R 755 "$MODULE_PATH"
 RUN ls -lah "$MODULE_PATH"/VMware.PowerCLI/
 RUN rm /tmp/PowerCLI.zip
-RUN pwsh -Command " \
-    Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; Get-Module -ListAvailable VMware.PowerCLI; Install-Module -Name VMware.PowerCLI -Scope CurrentUser -Force -AllowClobber; \
-    Import-Module VMware.PowerCLI -Verbose"
+RUN pwsh -Command "Import-Module '/usr/local/share/powershell/Modules/VMware.PowerCLI/VMware.PowerCLI.psd1'"
+#RUN pwsh -Command "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser"
+#RUN pwsh -Command "Get-Module -ListAvailable VMware.PowerCLI" 
+#RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -Scope AllUsers -Force -AllowClobber"
+RUN pwsh -Command "Import-Module VMware.PowerCLI -Verbose"
 
 FROM msft-install as vmware-install-amd64
 
