@@ -114,8 +114,8 @@ ARG POWERCLI_PATH="/usr/local/share/powershell/Modules"
 ADD ${POWERCLIURL} /tmp/VMware-PowerCLI-13.0.0-20829139.zip
 RUN mkdir -p $POWERCLI_PATH \
     && pwsh -Command Expand-Archive -Path /tmp/VMware-PowerCLI-13.0.0-20829139.zip -DestinationPath $POWERCLI_PATH \
-    && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip #\
-    # && ls -d $POWERCLI_PATH/VMware.* | grep -v 'VMware.ImageBuilder' | grep -v 'VMware.PowerCLI' | grep -v 'VMware.VimAutomation' | xargs rm -rf
+    && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip \
+    # && ls -d $POWERCLI_PATH/VMware.* | grep -v 'VMware.ImageBuilder' | grep -v 'VMware.PowerCLI' | grep -v 'VMware.Vim' | grep -v 'VMware.DeployAutomation' |  xargs rm -rf
     
 # Installing Python 3.7 libs: six psutil lxml pyopenssl
 # Needed apt package(s): gcc, python3, python3-dev, python3-distutils
