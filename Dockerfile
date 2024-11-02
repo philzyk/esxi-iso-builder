@@ -105,7 +105,7 @@ FROM msft-install AS vmware-install-arm64
 
 # PowerShell Core for ARM (important to use this archive file)
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
-ADD POWERCLI_PATH="/usr/local/share/powershell/Modules"
+ARG POWERCLI_PATH="/usr/local/share/powershell/Modules"
 ADD ${POWERCLIURL} /tmp/VMware-PowerCLI-13.0.0-20829139.zip
 RUN mkdir -p $POWERCLI_PATH \
     && pwsh -Command Expand-Archive -Path /tmp/vmware-powercli.zip -DestinationPath $POWERCLI_PATH \
