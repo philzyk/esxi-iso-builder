@@ -102,8 +102,11 @@ RUN pwsh -Command "Write-Output \$PSVersionTable" \
     && pwsh -Command "dotnet --list-runtimes" \
     && pwsh -Command "\$DebugPreference='Continue'; Write-Output 'Debug preference set to Continue'"
 
-FROM msft-install AS vmware-install
+FROM msft-install AS vmware-install-arm64
+FROM msft-install AS vmware-install-amd64
 
+FROM vmware-install-amd64 as final-amd64
+FROM vmware-install-arm64 as final-arm64
 # PowerShell Core for ARM (important to use this archive file)
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 ARG POWERCLI_PATH="/usr/local/share/powershell/Modules"
@@ -112,10 +115,6 @@ RUN mkdir -p $POWERCLI_PATH \
     && pwsh -Command Expand-Archive -Path /tmp/VMware-PowerCLI-13.0.0-20829139.zip -DestinationPath $POWERCLI_PATH \
     && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip \
     && ls -d $POWERCLI_PATH/VMware.* | grep -v 'VMware.ImageBuilder' | xargs rm -rf
-
-FROM msft-install AS vmware-install-arm64
-
-FROM msft-install AS vmware-install-amd64
 
 FROM vmware-install-${TARGETARCH} AS vmware-install-common
 
