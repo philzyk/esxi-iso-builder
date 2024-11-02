@@ -118,7 +118,7 @@ RUN mkdir -p $POWERCLI_PATH \
     && ls -d $POWERCLI_PATH/VMware.* | grep -v 'VMware.ImageBuilder' | grep -v 'VMware.PowerCLI' | xargs rm -rf
     
 # Installing Python 3.7 libs: six psutil lxml pyopenssl
-# Needed apt package(s): gcc, wget, python3, python3-dev, python3-distutils
+# Needed apt package(s): gcc, python3, python3-dev, python3-distutils
 USER $USERNAME
 RUN mkdir -p /home/$USERNAME/.local/bin && chown ${USER_UID}:${USER_GID} /home/$USERNAME/.local/bin && chmod 755 /home/$USERNAME/.local/bin
 ADD --chown=${USER_UID}:${USER_GID} https://bootstrap.pypa.io/pip/3.7/get-pip.py /home/$USERNAME/.local/bin
