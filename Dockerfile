@@ -105,20 +105,19 @@ FROM msft-install AS vmware-install-arm64
 
 # PowerShell Core for ARM (important to use this archive file)
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
-ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
-RUN mkdir -p /usr/local/share/powershell/Modules \
-    && pwsh -Command Expand-Archive -Path /tmp/vmware-powercli.zip -DestinationPath /usr/local/share/powershell/Modules \
-    && rm /tmp/vmware-powercli.zip
-#RUN pwsh -c "Save-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Path ~/" \
-#    && pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Force -Verbose -SkipPublisherCheck" \
-#    && rm -rf ~/VMware.*
+ADD POWERCLI_PATH="/usr/local/share/powershell/Modules"
+ADD ${POWERCLIURL} /tmp/VMware-PowerCLI-13.0.0-20829139.zip
+RUN mkdir -p $POWERCLI_PATH \
+    && pwsh -Command Expand-Archive -Path /tmp/vmware-powercli.zip -DestinationPath $POWERCLI_PATH \
+    && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip \
+    && ls -d $POWERCLI_PATH/VMware.* | grep -v 'VMware.ImageBuilder' | xargs rm -rf
 
-FROM msft-install AS vmware-install-amd64
+#FROM msft-install AS vmware-install-amd64
 
 # Install and setup VMware.PowerCLI PowerShell Module
-RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force -Verbose"
+#RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force -Verbose"
 
-FROM vmware-install-${TARGETARCH} AS vmware-install-common
+#FROM vmware-install-${TARGETARCH} AS vmware-install-common
 
 # Installing Python 3.7 libs: six psutil lxml pyopenssl
 # Needed apt package(s): gcc, wget, python3, python3-dev, python3-distutils
@@ -136,12 +135,7 @@ RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${
     && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 # Making working directories for diffrent esxi-iso-biulders
-RUN mkdir -p /home/$USERNAME/files/esxi-iso-biulder/{cfg_files,iso_temp} \
-    && mkdir -p /home/$USERNAME/files/esxi-iso-biulder/esxi6_7/{repo_zip_esxi6_7,ready_iso_esxi6_7,drivers_esxi6_7} \
-    && mkdir -p /home/$USERNAME/files/esxi-iso-biulder/esxi7/{repo_zip_esxi7,ready_iso_esxi7,drivers_esxi7} \
-    && mkdir -p /home/$USERNAME/files/esxi-iso-biulder/esxi8/{repo_zip_esxi8,ready_iso_esxi8,drivers_esxi8} \
-    && git clone https://github.com/itiligent/ESXi-Custom-ISO /home/$USERNAME/files/ESXi-Custom-ISO\
-    && git clone https://github.com/VFrontDe-Org/ESXi-Customizer-PS /home/$USERNAME/files/ESXi-Customizer-PS 
+RUN git clone https://github.com/VFrontDe-Org/ESXi-Customizer-PS /home/$USERNAME/files/ESXi-Customizer-PS 
 
 # Clean up Finalizing
 USER root
