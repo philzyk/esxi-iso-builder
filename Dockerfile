@@ -108,7 +108,7 @@ ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830
 ARG POWERCLI_PATH="/usr/local/share/powershell/Modules"
 ADD ${POWERCLIURL} /tmp/VMware-PowerCLI-13.0.0-20829139.zip
 RUN mkdir -p $POWERCLI_PATH \
-    && pwsh -Command Expand-Archive -Path /tmp/vmware-powercli.zip -DestinationPath $POWERCLI_PATH \
+    && pwsh -Command Expand-Archive -Path /tmp/VMware-PowerCLI-13.0.0-20829139.zip -DestinationPath $POWERCLI_PATH \
     && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip \
     && ls -d $POWERCLI_PATH/VMware.* | grep -v 'VMware.ImageBuilder' | xargs rm -rf
 
