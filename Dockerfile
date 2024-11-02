@@ -103,10 +103,15 @@ RUN pwsh -Command "Write-Output \$PSVersionTable" \
 
 FROM msft-install AS vmware-install-arm64
 
-# PowerShell Core for ARM (important to use Save-Module, as it's not installing on-line)
-RUN pwsh -c "Save-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Path ~/" \
-    && pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Force -Verbose -SkipPublisherCheck" \
-    && rm -rf ~/VMware.*
+# PowerShell Core for ARM (important to use this archive file)
+ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
+ADD ${POWERCLIURL} /tmp/vmware-powercli.zip
+RUN mkdir -p /usr/local/share/powershell/Modules \
+    && pwsh -Command Expand-Archive -Path /tmp/vmware-powercli.zip -DestinationPath /usr/local/share/powershell/Modules \
+    && rm /tmp/vmware-powercli.zip
+#RUN pwsh -c "Save-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Path ~/" \
+#    && pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Force -Verbose -SkipPublisherCheck" \
+#    && rm -rf ~/VMware.*
 
 FROM msft-install AS vmware-install-amd64
 
