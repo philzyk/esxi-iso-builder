@@ -115,7 +115,41 @@ ADD ${POWERCLIURL} /tmp/VMware-PowerCLI-13.0.0-20829139.zip
 RUN mkdir -p $POWERCLI_PATH \
     && pwsh -Command Expand-Archive -Path /tmp/VMware-PowerCLI-13.0.0-20829139.zip -DestinationPath $POWERCLI_PATH \
     && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip \
-    && ls -d $POWERCLI_PATH/VMware.* | grep -v 'VMware.ImageBuilder' | grep -v 'VMware.PowerCLI' | grep -v 'VMware.Vim' | grep -v 'VMware.DeployAutomation' |  xargs rm -rf
+    RUN mkdir -p $POWERCLI_PATH \
+    && pwsh -Command Expand-Archive -Path /tmp/VMware-PowerCLI-13.0.0-20829139.zip -DestinationPath $POWERCLI_PATH \
+    && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip \
+    && ls -d $POWERCLI_PATH/VMware.* | \
+    grep -Ev 'VMware.ImageBuilder' \
+            '|VMware.PowerCLI' \
+            '|VimAutomation.Sdk' \
+            '|VimAutomation.Common' \
+            '|VMware.Vim' \
+            '|VMware.VimAutomation.Core' \
+            '|VMware.VimAutomation.Srm' \
+            '|VMware.VimAutomation.License' \
+            '|VMware.VimAutomation.Vds' \
+            '|VMware.CloudServices' \
+            '|VMware.VimAutomation.Vmc' \
+            '|VMware.VimAutomation.Nsxt' \
+            '|VMware.VimAutomation.vROps' \
+            '|VMware.VimAutomation.Cis.Core' \
+            '|VMware.VimAutomation.HorizonView' \
+            '|VMware.VimAutomation.Cloud' \
+            '|VMware.DeployAutomation' \
+            '|VMware.VimAutomation.Storage' \
+            '|VMware.VimAutomation.StorageUtility' \
+            '|VMware.VumAutomation' \
+            '|VMware.VimAutomation.Security' \
+            '|VMware.VimAutomation.Hcx' \
+            '|VMware.VimAutomation.WorkloadManagement' \
+            '|VMware.Sdk.Runtime' \
+            '|VMware.Sdk.vSphere' \
+            '|VMware.PowerCLI.VCenter' \
+            '|VMware.Sdk.Nsx.Policy' \
+            '|VMware.Sdk.Vcf.CloudBuilder' \
+            '|VMware.Sdk.Vcf.SddcManager' | \
+    xargs rm -rf
+
     
 # Installing Python 3.7 libs: six psutil lxml pyopenssl
 # Needed apt package(s): gcc, python3, python3-dev, python3-distutils
