@@ -108,44 +108,13 @@ FROM msft-install AS vmware-install-amd64
 
 FROM vmware-install-${TARGETARCH} AS vmware-install-common
 
-# PowerShell Core for ARM (important to use this archive file)
+# PowerShell Core for ARM (important to use this archive file), plus left only needed Modules for iso building
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
 ARG POWERCLI_PATH="/usr/local/share/powershell/Modules"
 ADD ${POWERCLIURL} /tmp/VMware-PowerCLI-13.0.0-20829139.zip
 RUN mkdir -p $POWERCLI_PATH \
     && pwsh -Command "Expand-Archive -Path /tmp/VMware-PowerCLI-13.0.0-20829139.zip -DestinationPath $POWERCLI_PATH" \
-    && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip \
-    && ls -d /usr/local/share/powershell/Modules/VMware.* | grep -Ev \
-        '^VMware.ImageBuilder' \
-        '|^VMware.PowerCLI' \
-        '|^VimAutomation.Sdk' \
-        '|^VimAutomation.Common' \
-        '|^VMware.Vim' \
-        '|^VMware.VimAutomation.Core' \
-        '|^VMware.VimAutomation.Srm' \
-        '|^VMware.VimAutomation.License' \
-        '|^VMware.VimAutomation.Vds' \
-        '|^VMware.CloudServices' \
-        '|^VMware.VimAutomation.Vmc' \
-        '|^VMware.VimAutomation.Nsxt' \
-        '|^VMware.VimAutomation.vROps' \
-        '|^VMware.VimAutomation.Cis.Core' \
-        '|^VMware.VimAutomation.HorizonView' \
-        '|^VMware.VimAutomation.Cloud' \
-        '|^VMware.DeployAutomation' \
-        '|^VMware.VimAutomation.Storage' \
-        '|^VMware.VimAutomation.StorageUtility' \
-        '|^VMware.VumAutomation' \
-        '|^VMware.VimAutomation.Security' \
-        '|^VMware.VimAutomation.Hcx' \
-        '|^VMware.VimAutomation.WorkloadManagement' \
-        '|^VMware.Sdk.Runtime' \
-        '|^VMware.Sdk.vSphere' \
-        '|^VMware.PowerCLI.VCenter' \
-        '|^VMware.Sdk.Nsx.Policy' \
-        '|^VMware.Sdk.Vcf.CloudBuilder' \
-        '|^VMware.Sdk.Vcf.SddcManager' \
-    | xargs -r rm -rf
+    && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip 
     
 # Installing Python 3.7 libs: six psutil lxml pyopenssl
 # Needed apt package(s): gcc, python3, python3-dev, python3-distutils
