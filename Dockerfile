@@ -104,12 +104,16 @@ RUN pwsh -Command "Write-Output \$PSVersionTable" \
 
 FROM msft-install AS vmware-install-arm64
 
+# PowerShell Core for ARM (important to use this archive file)
+ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
+ARG POWERCLI_PATH="/usr/local/share/powershell/Modules"
+ADD ${POWERCLIURL} /tmp/VMware-PowerCLI-13.0.0-20829139.zip
+RUN mkdir -p $POWERCLI_PATH \
+    && pwsh -Command Expand-Archive -Path /tmp/VMware-PowerCLI-13.0.0-20829139.zip -DestinationPath $POWERCLI_PATH \
+    && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip \
+    && ls -d $POWERCLI_PATH/VMware.* | grep -v 'VMware.ImageBuilder' | xargs rm -rf
+
 FROM msft-install AS vmware-install-amd64
-
-# Install and setup VMware.PowerCLI PowerShell Module
-#RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force -Verbose"
-
-FROM vmware-install-${TARGETARCH} AS vmware-install-common
 
 # PowerShell Core for ARM (important to use this archive file)
 ARG POWERCLIURL=https://vdc-download.vmware.com/vmwb-repository/dcr-public/02830330-d306-4111-9360-be16afb1d284/c7b98bc2-fcce-44f0-8700-efed2b6275aa/VMware-PowerCLI-13.0.0-20829139.zip
@@ -119,6 +123,11 @@ RUN mkdir -p $POWERCLI_PATH \
     && pwsh -Command Expand-Archive -Path /tmp/VMware-PowerCLI-13.0.0-20829139.zip -DestinationPath $POWERCLI_PATH \
     && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip \
     && ls -d $POWERCLI_PATH/VMware.* | grep -v 'VMware.ImageBuilder' | xargs rm -rf
+
+# Install and setup VMware.PowerCLI PowerShell Module
+#RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force -Verbose"
+
+FROM vmware-install-${TARGETARCH} AS vmware-install-common
 
 # Installing Python 3.7 libs: six psutil lxml pyopenssl
 # Needed apt package(s): gcc, wget, python3, python3-dev, python3-distutils
