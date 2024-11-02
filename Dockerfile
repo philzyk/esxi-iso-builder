@@ -113,6 +113,10 @@ RUN mkdir -p $POWERCLI_PATH \
     && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip \
     && ls -d $POWERCLI_PATH/VMware.* | grep -v 'VMware.ImageBuilder' | xargs rm -rf
 
+FROM msft-install AS vmware-install-arm64
+
+FROM msft-install AS vmware-install-amd64
+
 FROM vmware-install-${TARGETARCH} AS vmware-install-common
 
 # Installing Python 3.7 libs: six psutil lxml pyopenssl
