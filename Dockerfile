@@ -102,7 +102,12 @@ RUN pwsh -Command "Write-Output \$PSVersionTable" \
     && pwsh -Command "dotnet --list-runtimes" \
     && pwsh -Command "\$DebugPreference='Continue'; Write-Output 'Debug preference set to Continue'"
 
-#FROM msft-install AS vmware-install-arm64
+FROM msft-install AS vmware-install-arm64
+
+FROM msft-install AS vmware-install-amd64
+
+# Install and setup VMware.PowerCLI PowerShell Module
+#RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force -Verbose"
 
 FROM msft-install AS vmware-install-powercli
 
@@ -114,11 +119,6 @@ RUN mkdir -p $POWERCLI_PATH \
     && pwsh -Command Expand-Archive -Path /tmp/VMware-PowerCLI-13.0.0-20829139.zip -DestinationPath $POWERCLI_PATH \
     && rm /tmp/VMware-PowerCLI-13.0.0-20829139.zip \
     && ls -d $POWERCLI_PATH/VMware.* | grep -v 'VMware.ImageBuilder' | xargs rm -rf
-
-#FROM msft-install AS vmware-install-amd64
-
-# Install and setup VMware.PowerCLI PowerShell Module
-#RUN pwsh -Command "Install-Module -Name VMware.PowerCLI -RequiredVersion 13.0.0.20829139 -Scope AllUsers -Repository PSGallery -Force -Verbose"
 
 FROM vmware-install-${TARGETARCH} AS vmware-install-common
 
