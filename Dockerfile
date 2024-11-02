@@ -28,6 +28,7 @@ RUN apt-get update && \
         sudo \
         whois \
         p7zip-full \
+        mc \
         less \
         libc6 \
         libgcc1 \
