@@ -160,7 +160,7 @@ RUN cd /home/$USERNAME/files/esxi-iso-builder && npm install
 EXPOSE 80
 
 # Set default command to start npm as $USERNAME
-CMD ["npm", "start"]
+#CMD ["npm", "start"]
 
 # Setting entrypoint to Powershell
 ENTRYPOINT ["pwsh"]
