@@ -38,6 +38,9 @@ RUN apt-get update || (sleep 5 && apt-get update) && \
         libstdc++6 \
         zlib1g
 
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
+
 # Configure en_US.UTF-8 Locale
 ENV LANGUAGE=en_US.UTF-8 \
     LANG=en_US.UTF-8 \
@@ -57,6 +60,9 @@ RUN groupadd --gid $USER_GID $USERNAME && \
     useradd --uid $USER_UID --gid $USER_GID --shell /usr/bin/pwsh --create-home $USERNAME && \
     echo "$USERNAME ALL=(root) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME && \
     chmod 0440 /etc/sudoers.d/$USERNAME
+
+RUN useradd -ms /bin/bash $USERNAME # should add bash to $USERNAME (need to be made normally)
+
 WORKDIR /home/$USERNAME
 
 # Installing Powershell on both amd64 and arm64 architectures specific
@@ -132,17 +138,27 @@ RUN pwsh -Command "Set-PowerCLIConfiguration -Scope User -ParticipateInCEIP \$${
     && pwsh -Command "Set-PowerCLIConfiguration -PythonPath /usr/bin/python3.7 -Scope User -Confirm:\$false"
 
 # Installing ESXi-Customizer-PS from https://v-front.de
-RUN git clone https://github.com/VFrontDe-Org/ESXi-Customizer-PS /home/$USERNAME/files/ESXi-Customizer-PS
+#RUN git clone https://github.com/VFrontDe-Org/ESXi-Customizer-PS /home/$USERNAME/files/ESXi-Customizer-PS
+COPY . /home/$USERNAME/files/esxi-iso-builder
 
 # Clean up Finalizing
 USER root
 RUN apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+WORKDIR /home/$USERNAME/files/esxi-iso-builder    
+COPY . /home/$USERNAME/files/esxi-iso-builder
+RUN chown -R $USERNAME:$USERNAME /home/$USERNAME/files/esxi-iso-builder
+
 USER $USERNAME
 
 # Switching back to interactive after container build
-ENV DEBIAN_FRONTEND=dialog
+#ENV DEBIAN_FRONTEND=dialog
+
+RUN cd /home/$USERNAME/files/esxi-iso-builder && npm install
+
+# Set default command to start npm as $USERNAME
+CMD ["npm", "start"]
 
 # Setting entrypoint to Powershell
 ENTRYPOINT ["pwsh"]
