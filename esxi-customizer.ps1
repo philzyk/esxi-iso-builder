@@ -545,18 +545,35 @@ if ( ($pkgDir -ne @()) -or $update -or ($load -ne @()) -or ($remove -ne @()) ) {
 
 
 # Build the export command:
-$cmd = "Export-EsxImageprofile -Imageprofile " + "`'" + $MyProfile.Name + "`'"
+#$cmd = "Export-EsxImageprofile -Imageprofile " + "`'" + $MyProfile.Name + "`'"
+#
+#if ($ozip) {
+#    $outFile = "`'" + $outDir + "\" + $MyProfile.Name + ".zip" + "`'"
+#    $cmd = $cmd + " -ExportTobundle"
+#} else {
+#    $outFile = "`'" + $outDir + "\" + $MyProfile.Name + ".iso" + "`'"
+#    $cmd = $cmd + " -ExportToISO"
+#}
+#$cmd = $cmd + " -FilePath " + $outFile
+#if ($nsc) { $cmd = $cmd + " -NoSignatureCheck" }
+#$cmd = $cmd + " -Force"
 
+
+# Build the export command:
+$cmd = "Export-EsxImageprofile -Imageprofile " + "`'" + $MyProfile.Name + "`'"
+$outFile = Get-OutputFilePath -OutDir $outDir -MyProfile $MyProfile -OZip:$ozip
+$cmd = $cmd + " -FilePath " + "`'" + $outFile + "`'"
 if ($ozip) {
-    $outFile = "`'" + $outDir + "\" + $MyProfile.Name + ".zip" + "`'"
     $cmd = $cmd + " -ExportTobundle"
 } else {
-    $outFile = "`'" + $outDir + "\" + $MyProfile.Name + ".iso" + "`'"
     $cmd = $cmd + " -ExportToISO"
 }
-$cmd = $cmd + " -FilePath " + $outFile
 if ($nsc) { $cmd = $cmd + " -NoSignatureCheck" }
 $cmd = $cmd + " -Force"
+
+
+
+
 
 # Run the export:
 write-host -nonewline ("`nExporting the Imageprofile to " + $outFile + ". Please be patient ...")
