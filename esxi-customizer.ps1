@@ -33,7 +33,8 @@
     [string[]]$remove = @(),
     [switch]$test = $false,
     [switch]$sip = $false,
-    [switch]$nsc = $false,
+    [switch]$sc = $false,
+    [switch]$fs = $false,
     [switch]$help = $false,
     [switch]$ozip = $false,
     [switch]$v50 = $false,
@@ -215,13 +216,15 @@ if ($help) {
     write-host "   -v80 | -v70 |"
     write-host "   -v67 | -v65 | -v60 |"
     write-host "   -v55 | -v51 | -v50 : Use only ESXi 8.0/7.0/6.7/6.5/6.0/5.5/5.1/5.0 Imageprofiles as input, ignore other versions"
-    write-host "   -nsc               : use -NoSignatureCheck with export"
+    write-host "   -sc                : turn off default -NoSignatureCheck with export"
     write-host "   -log <file>        : Use custom log file <file>"
+    write-host "   -fs                : send output file (customized ISO or Offline bundle) to https://file.io"
     write-host "   -ipname <name>"
     write-host "   -ipdesc <desc>"
     write-host "   -ipvendor <vendor> : provide a name, description and/or vendor for the customized"
     write-host "                        Imageprofile (the default is derived from the cloned input Imageprofile)"
     write-host "   -test              : skip package download and image build (for testing)`n"
+    
     exit
 } else {
     write-host "(Call with -help for instructions)"
@@ -560,20 +563,62 @@ if ( ($pkgDir -ne @()) -or $update -or ($load -ne @()) -or ($remove -ne @()) ) {
 
 
 # Build the export command:
+#$cmd = "Export-EsxImageprofile -Imageprofile " + "`'" + $MyProfile.Name + "`'"
+#$outFile = Get-OutputFilePath -OutDir $outDir -MyProfile $MyProfile -OZip:$ozip
+#$cmd = $cmd + " -FilePath " + "`'" + $outFile + "`'"
+#if ($ozip) {
+#    $cmd = $cmd + " -ExportTobundle"
+#} else {
+#    $cmd = $cmd + " -ExportToISO"
+#}
+#if ($nsc) { $cmd = $cmd + " -NoSignatureCheck" }
+#$cmd = $cmd + " -Force"
+
+# Build the export command:
 $cmd = "Export-EsxImageprofile -Imageprofile " + "`'" + $MyProfile.Name + "`'"
-$outFile = Get-OutputFilePath -OutDir $outDir -MyProfile $MyProfile -OZip:$ozip
-$cmd = $cmd + " -FilePath " + "`'" + $outFile + "`'"
+
 if ($ozip) {
+    $outFile = "`'" + $outDir + "\" + $MyProfile.Name + ".zip" + "`'"
     $cmd = $cmd + " -ExportTobundle"
 } else {
+    $outFile = "`'" + $outDir + "\" + $MyProfile.Name + ".iso" + "`'"
     $cmd = $cmd + " -ExportToISO"
 }
-if ($nsc) { $cmd = $cmd + " -NoSignatureCheck" }
+$cmd = $cmd + " -FilePath " + $outFile
+if (-not $sc) { $cmd = $cmd + " -NoSignatureCheck" }
+$outFile = $outFile + " -NoSignatureCheck"
 $cmd = $cmd + " -Force"
+########################################################################################################################
+#function Upload-File {
+#    param (
+#        [switch]$fs
+#    )
+#    try {
+#        $response = Invoke-RestMethod -Uri "https://file.io" -Method Post -Form @{file = Get-Item -Path $outFile}
+#        if ($response.success) {
+#            Write-Host "File uploaded successfully. Download link: $($response.link)"
+#        } else {
+#            Write-Host "File upload failed. Response: $($response | ConvertTo-Json -Depth 10)"
+#        }
+#    } catch {
+#        Write-Host "An error occurred during file upload: $_"
+#    }
+#}
+#
+#Upload-File -filePath $outFile
+---------------------------------------------------------------------------------------------------------------------------
+#if ($fs) { #### use this snippet as example####
+#    # Connect the V-Front Online depot
+#    write-host -nonewline "`nConnecting the V-Front Online depot ..."
+#    if ($vftdepot = Add-EsxSoftwaredepot $vftdepotURL) {
+#        write-host -F Green " [OK]"
+#    } else {
+#        write-host -F Red "`nFATAL ERROR: Cannot add the V-Front Online depot. Please check your internet connectivity and/or proxy settings!`n"
+#        exit
+#    }
+#}
 
-
-
-
+############################################################################################################################
 
 # Run the export:
 write-host -nonewline ("`nExporting the Imageprofile to " + $outFile + ". Please be patient ...")
