@@ -87,6 +87,6 @@ app.get('/api/status/:id', (req, res) => {
     res.json({ status: 'in_progress' });
 });
 
-app.listen(port, () => {
-    console.log(`API server listening at http://localhost:${port}`);
+app.listen(3000, '0.0.0.0', () => {
+  console.log('App running on 0.0.0.0:3000');
 });
